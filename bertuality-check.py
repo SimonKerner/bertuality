@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov  8 10:42:40 2022
-
-@author: Selii
-"""
-
 import wikipediaapi
 import pandas as pd
 import re
@@ -122,6 +115,7 @@ def remove_duplicates(array):   # durch Iterieren wird die originale Reihenfolge
         if a not in result:
             result.append(a)
     return result
+
   
 
 # overall text_filter for page loader  
@@ -213,8 +207,9 @@ def make_predictions(masked_sentence, sent_array):
         
         --Create Pipeline
 """
-#arr = WikiToList()
+
 # load pages
+
 page_1 = wikipedia_loader("Coronavirus", "text")
 page_2 = wikipedia_loader("SARS-CoV-2", "text")
 page_3 = wikipedia_loader("COVID-19", "text")
@@ -225,26 +220,17 @@ page_5 = wikipedia_loader("COVID-19_pandemic_in_Europe", "text")
 filtered_pages = text_filter(page_1, page_2, page_3, page_4, page_5)
 merged_pages = merge_pages(filtered_pages)
 
-# put pages to dataframe 
-df_arr = pd.DataFrame(merged_pages, columns = ["sentence"])  #just to display the array better
 
+# put pages to dataframe 
+# df_arr = pd.DataFrame(merged_pages, columns = ["sentence"])  #just to display the array better
 # test = pd.DataFrame(filter_arr(arr, ["Hawai"]))
 
+
 # predict
-
-#pred = make_predictions("Covid is a [MASK]", filter_arr_or(merged_pages, [["Covid", "Virus"], ["Covid"]]))
-
-pred_2 = make_predictions("[CLS][MASK] first appeared in Wuhan.", filter_arr_or(merged_pages, [["Wuhan"], ["China"]]))
-
-#pred_3 = make_predictions("[MASK] started in Wuhan.", filter_arr_or(merged_pages, [["Wuhan"], ["China"]]))
-
-#predictions_1 = make_predictions("Barack Obama was born in [MASK].", filter_arr_or(merged_pages, [["Obama","was","born","in"],["Obama","was","born"],["Obama","born"],["born"]]))
+pred = make_predictions("Covid is a [MASK]", filter_arr_or(merged_pages, [["Covid", "Virus"], ["Covid"]]))
 
 
-#predictions_2 = make_predictions("Joe Biden was born in [MASK].", filter_arr_or(merged_pages, [["Joe","Biden","was","born","in"],["Biden","was","born","in"],["Biden","was","born"],["Biden","born"],["born"]]))
 
-
-#predictions_3 = make_predictions("Michael Jackson was born in [MASK].", filter_arr_or(arr, [["Michael","Jackson","was","born","in"],["Jackson","was","born","in"],["Jackson","was","born"],["Jackson","born"],["born"]]))
 
 """
     MAIN
