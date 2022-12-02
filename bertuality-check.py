@@ -92,7 +92,7 @@ def filterForOneWord(sent_list, term):
     return result  
 
 # Maxi
-def filter_arr(sent_list, terms):
+def filter_list(sent_list, terms):
     result = sent_list
     for term in terms:
         result = filterForOneWord(result, term)
@@ -100,15 +100,15 @@ def filter_arr(sent_list, terms):
     return result
 
 # Maxi
-def filter_arr_or(sent_list, twod_list):    #twod_list = 2 dimensional list, but can also be a one-dimensional list!
+def filter_list_final(sent_list, twod_list):    #twod_list = 2 dimensional list, but can also be a one-dimensional list!
     result = [] 
     
     if isinstance(twod_list[0], list):      # if the list is 2d
         for lst in twod_list:
-            result += filter_arr(sent_list, lst)
+            result += filter_list(sent_list, lst)
     
     if isinstance(twod_list[0], str):                   # so that the given list can also be one-dimensional!
-        result += filter_arr(sent_list, twod_list)
+        result += filter_list(sent_list, twod_list)
         
     result = remove_duplicates(result)
     return result
@@ -227,8 +227,8 @@ def make_predictions(masked_sentence, sent_sent_list):
         --Create Pipeline
 """
 
-# load pages
 
+# load pages
 page_1 = wikipedia_loader("Coronavirus", "text")
 page_2 = wikipedia_loader("SARS-CoV-2", "text")
 page_3 = wikipedia_loader("COVID-19", "text")
@@ -239,14 +239,16 @@ page_5 = wikipedia_loader("COVID-19_pandemic_in_Europe", "text")
 filtered_pages = text_filter(page_1, page_2, page_3, page_4, page_5)
 merged_pages = merge_pages(filtered_pages)
 
+# predict
+pred = make_predictions("Covid is a [MASK]", filter_list_final(merged_pages, ["Covid", "Virus", "China"]))
+
 
 # put pages to dataframe 
 # df_arr = pd.DataFrame(merged_pages, columns = ["sentence"])  #just to display the sent_list better
-# test = pd.DataFrame(filter_arr(arr, ["Hawai"]))
+# test = pd.DataFrame(filter_list(arr, ["Hawai"]))
 
 
-# predict
-pred = make_predictions("Covid is a [MASK]", filter_arr_or(merged_pages, ["Covid", "Virus", "China"]))
+
 
 
 
