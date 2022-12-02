@@ -73,10 +73,10 @@ def split_into_sentences(text):
     return sentences
 
 # Maxi        
-def filterForOneWord(array, term):  
+def filterForOneWord(sent_list, term):  
     result = []
-    for i in range(len(array)):
-        words = array[i].split()
+    for i in range(len(sent_list)):
+        words = sent_list[i].split()
         words = [x.lower().strip() for x in words]  #lowercase and strip
         words = [x.replace(".", "") for x in words] #remove "." because otherwise "." belongs to the word
         words = [x.replace(",", "") for x in words] #remove "," because otherwise "," belongs to the word
@@ -88,33 +88,43 @@ def filterForOneWord(array, term):
         term = term.lower().strip()
         for word in words:
             if term in word:    #term muss nur in Wort sein: "ama" steckt in "Obamas"
-                result.append(array[i])
+                result.append(sent_list[i])
     return result  
 
 # Maxi
-def filter_arr(array, terms):
-    result = array
+def filter_arr(sent_list, terms):
+    result = sent_list
     for term in terms:
         result = filterForOneWord(result, term)
     result = remove_duplicates(result)
     return result
 
 # Maxi
-def filter_arr_or(array, twod_list):    #twod_list = 2 dimensional list
-    result = []
+def filter_arr_or(sent_list, twod_list):    #twod_list = 2 dimensional list
+    result = [] 
     for lst in twod_list:
-        result += filter_arr(array, lst)
+        result += filter_arr(sent_list, lst)
     result = remove_duplicates(result)
     return result
 
 # Maxi
-def remove_duplicates(array):   # durch Iterieren wird die originale Reihenfolge beibehalten!
+def remove_duplicates(sent_list):   # durch Iterieren wird die originale Reihenfolge beibehalten!
     result = []
-    for i in range(len(array)):
-        a = array[i]
+    for i in range(len(sent_list)):
+        a = sent_list[i]
         if a not in result:
             result.append(a)
     return result
+
+           
+def remove_too_long_sentences(sent_list):
+    for sent in sent_list:
+        encoding = tokenizer.encode(sent)
+        if len((tokenizer.convert_ids_to_tokens(encoding))) > 102:    #512/5 = 102; max token length: 512, each sentence is taken 5 times
+            sent_list.remove(sent)
+            
+    return sent_list
+    
 
   
 
@@ -136,6 +146,9 @@ def merge_pages(filtered_pages):
     for page in filtered_pages:
         for text in page:
             merged.append(text)
+    
+    merged = remove_too_long_sentences(merged)
+        
     return merged
 
 """
@@ -150,7 +163,7 @@ model_pre = BertForMaskedLM.from_pretrained('bert-large-uncased')
 
 
 # make predictions
-def make_predictions(masked_sentence, sent_array):
+def make_predictions(masked_sentence, sent_sent_list):
     
     # pipeline pre-trained
     fill_mask_pipeline_pre = pipeline("fill-mask", model = model_pre, tokenizer = tokenizer)
@@ -160,7 +173,7 @@ def make_predictions(masked_sentence, sent_array):
     pred = pd.DataFrame(columns = columns)
     
     #fill df
-    pred['input'] = sent_array
+    pred['input'] = sent_sent_list
     pred['masked'] = masked_sentence
 
     #make predictions
@@ -222,7 +235,7 @@ merged_pages = merge_pages(filtered_pages)
 
 
 # put pages to dataframe 
-# df_arr = pd.DataFrame(merged_pages, columns = ["sentence"])  #just to display the array better
+# df_arr = pd.DataFrame(merged_pages, columns = ["sentence"])  #just to display the sent_list better
 # test = pd.DataFrame(filter_arr(arr, ["Hawai"]))
 
 
