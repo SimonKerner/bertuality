@@ -100,10 +100,16 @@ def filter_arr(sent_list, terms):
     return result
 
 # Maxi
-def filter_arr_or(sent_list, twod_list):    #twod_list = 2 dimensional list
+def filter_arr_or(sent_list, twod_list):    #twod_list = 2 dimensional list, but can also be a one-dimensional list!
     result = [] 
-    for lst in twod_list:
-        result += filter_arr(sent_list, lst)
+    
+    if isinstance(twod_list[0], list):      # if the list is 2d
+        for lst in twod_list:
+            result += filter_arr(sent_list, lst)
+    
+    if isinstance(twod_list[0], str):                   # so that the given list can also be one-dimensional!
+        result += filter_arr(sent_list, twod_list)
+        
     result = remove_duplicates(result)
     return result
 
@@ -240,7 +246,7 @@ merged_pages = merge_pages(filtered_pages)
 
 
 # predict
-pred = make_predictions("Covid is a [MASK]", filter_arr_or(merged_pages, [["Covid", "Virus"], ["Covid"]]))
+pred = make_predictions("Covid is a [MASK]", filter_arr_or(merged_pages, ["Covid", "Virus", "China"]))
 
 
 
