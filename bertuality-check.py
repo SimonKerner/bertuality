@@ -243,6 +243,11 @@ merged_pages = merge_pages(filtered_pages)
 pred = make_predictions("Covid is a [MASK]", filter_list_final(merged_pages, ["Covid", "Virus", "China"]))
 
 
+
+
+                           
+                            
+
 # put pages to dataframe 
 # df_arr = pd.DataFrame(merged_pages, columns = ["sentence"])  #just to display the sent_list better
 # test = pd.DataFrame(filter_list(arr, ["Hawai"]))
