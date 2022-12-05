@@ -2,6 +2,7 @@ import wikipediaapi
 import pandas as pd
 import re
 from transformers import BertTokenizer, BertForMaskedLM, pipeline
+import random
       
 """ 
      API/Scraper Calls for Websites
@@ -91,7 +92,16 @@ def filterForOneWord(sent_list, term):
                 result.append(sent_list[i])
     return result  
 
-# Maxi
+
+def remove_duplicates(sent_list):   # durch Iterieren wird die originale Reihenfolge beibehalten!
+    result = []
+    for i in range(len(sent_list)):
+        a = sent_list[i]
+        if a not in result:
+            result.append(a)
+    return result
+
+
 def filter_list(sent_list, terms):
     result = sent_list
     for term in terms:
@@ -99,7 +109,7 @@ def filter_list(sent_list, terms):
     result = remove_duplicates(result)
     return result
 
-# Maxi
+
 def filter_list_final(sent_list, twod_list):    #twod_list = 2 dimensional list, but can also be a one-dimensional list!
     result = [] 
     
@@ -112,17 +122,8 @@ def filter_list_final(sent_list, twod_list):    #twod_list = 2 dimensional list,
         
     result = remove_duplicates(result)
     return result
-
-# Maxi
-def remove_duplicates(sent_list):   # durch Iterieren wird die originale Reihenfolge beibehalten!
-    result = []
-    for i in range(len(sent_list)):
-        a = sent_list[i]
-        if a not in result:
-            result.append(a)
-    return result
-
-           
+        
+   
 def remove_too_long_sentences(sent_list):
     for sent in sent_list:
         encoding = tokenizer.encode(sent)
@@ -132,19 +133,16 @@ def remove_too_long_sentences(sent_list):
     return sent_list
     
 
-  
-
 # overall text_filter for page loader  
-def text_filter(*page_loader):
+def sentence_converter(*page_loader):
     # list holds many pages
-    """
-        Insert Maxi Functions WIP_v.1
-    """
+    
     filtered_information = []
     for page in page_loader:
         filtered_information.append(split_into_sentences(page))
 
     return filtered_information
+
 
 # used to merge the list of pages into one list with all information
 def merge_pages(filtered_pages):
@@ -152,15 +150,99 @@ def merge_pages(filtered_pages):
     for page in filtered_pages:
         for text in page:
             merged.append(text)
+   
+    merged = remove_too_long_sentences(merged)    
     
-    merged = remove_too_long_sentences(merged)
-        
     return merged
 
+
+# create keywordlist with deletion criteria: delete random word, from left/right, longest, shortest
+def keyword_creator(masked_sentence, word_deletion=True, criteria="random", min_key_words=3):
+    #prep sentence
+    masked_sentence = masked_sentence.replace("[MASK]", "")
+    masked_sentence = masked_sentence.replace(".", "")
+    masked_sentence = masked_sentence.split()
+
+    key_list = [masked_sentence]
+    
+    #further sentence preperation
+    if not word_deletion:
+        return key_list
+    
+    else:
+        temp_key_list = list(key_list[0])
+        
+        for i in range(min_key_words, len(temp_key_list)): 
+    
+            # delete a word from masked_sentence chosen one of many criterias
+            if criteria == "random":
+                
+                random_word = temp_key_list[random.randint(0, len(temp_key_list)-1)]
+                
+                #make copy from temporary list to prevent collision and remove rand word from both lists
+                temp_temp_key_list = temp_key_list.copy()
+                
+                temp_key_list.remove(random_word)
+                temp_temp_key_list.remove(random_word)
+                
+                #append temp_temp to key_list
+                key_list.append(temp_temp_key_list)
+            
+            elif criteria == "left":
+                temp_temp_key_list = temp_key_list.copy()
+                
+                # remove first item in list
+                temp_key_list.pop(0)
+                temp_temp_key_list.pop(0)
+                
+                #append temp_temp to key_list
+                key_list.append(temp_temp_key_list)
+            
+            elif criteria == "right":
+                temp_temp_key_list = temp_key_list.copy()
+                
+                # remove first item in list
+                temp_key_list.pop()
+                temp_temp_key_list.pop()
+                
+                #append temp_temp to key_list
+                key_list.append(temp_temp_key_list)
+                
+            elif criteria == "shortest":
+                shortest = min(filter(None, temp_key_list), key=len)
+                
+                temp_temp_key_list = temp_key_list.copy()
+                
+                # remove first item in list
+                temp_key_list.remove(shortest)
+                temp_temp_key_list.remove(shortest)
+                
+                #append temp_temp to key_list
+                key_list.append(temp_temp_key_list)
+            
+            elif criteria == "longest":
+                shortest = max(filter(None, temp_key_list), key=len)
+                
+                temp_temp_key_list = temp_key_list.copy()
+                
+                # remove first item in list
+                temp_key_list.remove(shortest)
+                temp_temp_key_list.remove(shortest)
+                
+                #append temp_temp to key_list
+                key_list.append(temp_temp_key_list)
+                
+            else:
+                pass
+            
+        return key_list
+
+
 """
-    BERT Input:
+    BERT :
         
 """
+
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 
@@ -226,37 +308,6 @@ def make_predictions(masked_sentence, sent_list):
         
         --Create Pipeline
 """
-
-"""
-# load pages
-page_1 = wikipedia_loader("Coronavirus", "text")
-page_2 = wikipedia_loader("SARS-CoV-2", "text")
-page_3 = wikipedia_loader("COVID-19", "text")
-page_4 = wikipedia_loader("COVID-19_pandemic", "text")
-page_5 = wikipedia_loader("COVID-19_pandemic_in_Europe", "text")
-
-# filter pages
-filtered_pages = text_filter(page_1, page_2, page_3, page_4, page_5)
-merged_pages = merge_pages(filtered_pages)
-
-# predict
-pred = make_predictions("Covid is a [MASK]", filter_list_final(merged_pages, ["Covid", "Virus", "China"]))
-"""
-
-
-
-                           
-                            
-
-# put pages to dataframe 
-# df_arr = pd.DataFrame(merged_pages, columns = ["sentence"])  #just to display the sent_list better
-# test = pd.DataFrame(filter_list(arr, ["Hawai"]))
-
-
-
-
-
-
 
 """
     MAIN
