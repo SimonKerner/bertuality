@@ -4,7 +4,7 @@ from BERTuality import merge_pages
 from BERTuality import make_predictions
 from BERTuality import filter_list_final
 
-
+"""
 # load pages
 page_1 = wikipedia_loader("Coronavirus", "text")
 page_2 = wikipedia_loader("SARS-CoV-2", "text")
@@ -18,8 +18,9 @@ merged_pages = merge_pages(filtered_pages)
 
 # predict
 pred_1 = make_predictions("Covid is a [MASK]", filter_list_final(merged_pages, ["Covid", "Virus", "China"]))
+"""
 
-
-
-
+page_6 = wikipedia_loader("Lionel_Messi", "text")
+filtered_pages = text_filter(page_6)
+merged_pages = merge_pages(filtered_pages)
 pred_2 = make_predictions("Lionel Messi was born in [MASK].", filter_list_final(merged_pages, [["Lionel","Messi","was","born","in"],["Messi","was","born","in"],["Messi","born","in"]]))
