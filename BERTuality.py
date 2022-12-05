@@ -227,7 +227,7 @@ def make_predictions(masked_sentence, sent_sent_list):
         --Create Pipeline
 """
 
-
+"""
 # load pages
 page_1 = wikipedia_loader("Coronavirus", "text")
 page_2 = wikipedia_loader("SARS-CoV-2", "text")
@@ -241,7 +241,7 @@ merged_pages = merge_pages(filtered_pages)
 
 # predict
 pred = make_predictions("Covid is a [MASK]", filter_list_final(merged_pages, ["Covid", "Virus", "China"]))
-
+"""
 
 
 
