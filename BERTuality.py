@@ -169,7 +169,7 @@ model_pre = BertForMaskedLM.from_pretrained('bert-large-uncased')
 
 
 # make predictions
-def make_predictions(masked_sentence, sent_sent_list):
+def make_predictions(masked_sentence, sent_list):
     
     # pipeline pre-trained
     fill_mask_pipeline_pre = pipeline("fill-mask", model = model_pre, tokenizer = tokenizer)
@@ -179,7 +179,7 @@ def make_predictions(masked_sentence, sent_sent_list):
     pred = pd.DataFrame(columns = columns)
     
     #fill df
-    pred['input'] = sent_sent_list
+    pred['input'] = sent_list
     pred['masked'] = masked_sentence
 
     #make predictions
