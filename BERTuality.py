@@ -7,11 +7,11 @@ import random
 """ 
      API/Scraper Calls for Websites
         - Wikipedia     -- working
-        - BBC           -- 
-        - CNN           -- 
-        - Guardian      --
-        - NYT           --
-        - overall News  --
+        - BBC           -- not working
+        - CNN           -- not working
+        - Guardian      -- working
+        - NYT           -- maybe working
+        - overall News  -- NewsAPI.org
 """
 
 def wikipedia_loader(page, summary_or_text="summary", language="en"):
