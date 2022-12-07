@@ -221,13 +221,13 @@ def keyword_creator(masked_sentence, word_deletion=True, criteria="random", min_
                 key_list.append(temp_temp_key_list)
             
             elif criteria == "longest":
-                shortest = max(filter(None, temp_key_list), key=len)
+                longest = max(filter(None, temp_key_list), key=len)
                 
                 temp_temp_key_list = temp_key_list.copy()
                 
                 # remove first item in list
-                temp_key_list.remove(shortest)
-                temp_temp_key_list.remove(shortest)
+                temp_key_list.remove(longest)
+                temp_temp_key_list.remove(longest)
                 
                 #append temp_temp to key_list
                 key_list.append(temp_temp_key_list)
