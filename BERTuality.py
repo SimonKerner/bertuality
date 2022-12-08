@@ -66,14 +66,12 @@ def NewsAPI_loader(topic):
         element = element.replace('Continue reading...', '')
         element = element.replace('.com', '')
         element = element.replace('...', '')
-        """
         if element.endswith("…"):           # sometimes a word ends ends in the middle with ... ("He did this and th...") --> remove incomplete word at the end
             words = element.split()         # but most of the time the word is still complete, so the function is not used now, but might be used later
             words.pop(len(words) -1)
             element = ""
             for word in words:
-                element += (word + " ")   
-        """        
+                element += (word + " ")         
         element = element.replace('…', '') 
         element = element.strip()
         if (not element.endswith(".") and not element.endswith("!") and not element.endswith("?")):     #add "." at end of every sentence
