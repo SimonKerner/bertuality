@@ -28,6 +28,6 @@ filtered_pages = sentence_converter(page_6)
 merged_pages = merge_pages(filtered_pages)
 
 masked_sentence = "Lionel Messi was born in [MASK]."
-keywords = keyword_creator(masked_sentence, word_deletion=True, criteria="random", min_key_words=3)
+keywords = keyword_creator(masked_sentence, word_deletion=True, criteria="shortest", min_key_words=3)
 
 pred_2 = make_predictions(masked_sentence, filter_list_final(merged_pages, keywords))
