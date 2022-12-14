@@ -1,10 +1,11 @@
-from BERTuality import wikipedia_loader
+from BERTuality_loader import wikipedia_loader
+from BERTuality_loader import NewsAPI_loader
 from BERTuality import sentence_converter
 from BERTuality import merge_pages
 from BERTuality import make_predictions
 from BERTuality import filter_list_final
 from BERTuality import keyword_creator
-from BERTuality import NewsAPI_loader
+
 
 
 """
