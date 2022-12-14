@@ -1,5 +1,3 @@
-from BERTuality_loader import wikipedia_loader
-from BERTuality_loader import NewsAPI_loader
 from transformers import BertTokenizer, BertForMaskedLM, pipeline
 import pandas as pd
 import random
