@@ -58,13 +58,11 @@ pred_2_own_keywords = make_predictions(masked_sentence, filter_list_final(merged
 """
 
 # guardian test
-
-guardian_collection = guardian_loader(["world/coronavirus-outbreak"], "2022-12-01")
+guardian_collection, guardian_df = guardian_loader("2022-12-07", "2022-12-15", "Covid-19")
 
 filtered_pages = sentence_converter(guardian_collection)
 merged_pages = merge_pages(filtered_pages)
 
-pred_1 = make_predictions("Covid is a [MASK]", filter_list_final(merged_pages, ["Covid", "Virus", "China"]))
 
 
 

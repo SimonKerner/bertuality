@@ -90,30 +90,28 @@ def NewsAPI_loader(topic):
 #Selectolax anstatt von BS. 
 
 
-def query_api(tag, page, from_date, api_key):
-    """
-    Function to query the API for a particular tag
-    returns: a response from API
-    """
-    response = requests.get("https://content.guardianapis.com/search?tag="
-                            + tag + "&from-date=" + from_date 
-                            +"&page=" + str(page) + "&page-size=200&api-key=" + api_key)
+def query_api(page, from_date, to_date, order_by, query, api_key):
+
+    response = requests.get("https://content.guardianapis.com/search?from-date="
+                            + from_date + "&to-date=" + to_date + "&order-by=" + order_by 
+                            +"&page=" + str(page) + "&page-size=200" + "&q=" + query +  
+                            "&api-key=" + api_key)
     return response
 
 
-def get_results_for_tag(tag, from_date, api_key):
+def get_results_for_query(from_date, to_date, order_by, query, api_key):
     """
     Function to run a for loop for results greater than 200. 
     Calls the query_api function accordingly
     returns: a list of JSON results
     """
     json_responses = []
-    response = query_api(tag, 1, from_date, api_key).json()
+    response = query_api(1, from_date, to_date, order_by, query, api_key).json()
     json_responses.append(response)
     number_of_results = response['response']['total']
     if number_of_results > 200:
         for page in range(2, (round(number_of_results/200))+1):
-            response = query_api(tag, page, from_date, api_key).json()
+            response = query_api(page, from_date, to_date, order_by, query, api_key).json()
             json_responses.append(response)
     return json_responses
 
@@ -128,15 +126,12 @@ def convert_json_responses_to_df(json_responses):
         df_results.append(df)
     all_df = pd.concat(df_results)
     return all_df
-        
-def get_results_for_all_tags(tag_list, from_date, api_key):
-    tag_df_list = []
-    for tag in tag_list:
-        json_responses = get_results_for_tag(tag, from_date, api_key)
-        tag_df = convert_json_responses_to_df(json_responses)
-        tag_df_list.append(tag_df)
-    all_tag_df = pd.concat(tag_df_list)
-    return all_tag_df
+
+
+def guardian_call(from_date, to_date, query, order_by, api_key):
+    json_responses = get_results_for_query(from_date, to_date, order_by, query, api_key)
+    guardian_df = convert_json_responses_to_df(json_responses)
+    return guardian_df
 
 """
     Create Soup:
@@ -146,6 +141,7 @@ def get_results_for_all_tags(tag_list, from_date, api_key):
 #further prep
 def html_cleaner(raw_html):
     filtered = re.sub('<[^>]*>', "", raw_html)
+    filtered = filtered.replace("Sign up now! Sign up now! Sign up now? Sign up now!", "")
     filtered = filtered.replace("""Sign up to Business TodayGet set for the working 
                                 day – we'll point you to the all the business 
                                 news and analysis you need every morning""", "")
@@ -168,14 +164,18 @@ def get_articles(link_df):
     return filtered_article_list
 
 
-def guardian_loader(tag_list, from_date):
+def guardian_loader(from_date, to_date, query, order_by="relevance"):
     api_key = 'ec1a9d25-67dc-4f71-8313-589a96c548f9'
     
-    guardian_df = get_results_for_all_tags(tag_list, from_date, api_key)
-    guardian_df.drop_duplicates(subset=['webTitle', 'webUrl'], inplace = True)
-    guardian_df['webPublicationDate'] = guardian_df['webPublicationDate'].apply(lambda x: pd.to_datetime(x))
+    guardian_df = guardian_call(from_date, to_date, query, order_by, api_key)
     
-    return get_articles(guardian_df["webUrl"])    
+    guardian_df.drop(guardian_df.loc[guardian_df['type']=="interactive"].index, inplace=True)
+    guardian_df.drop(guardian_df.loc[guardian_df['type']=="liveblog"].index, inplace=True)
+    guardian_df.drop_duplicates(subset=['webTitle', 'webUrl'], inplace = True)
+    
+    #guardian_df['webPublicationDate'] = guardian_df['webPublicationDate'].apply(lambda x: pd.to_datetime(x))
+    
+    return get_articles(guardian_df["webUrl"]), guardian_df
     
     
     
