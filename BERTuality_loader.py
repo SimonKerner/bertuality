@@ -1,6 +1,9 @@
 import wikipediaapi
 from newsapi import NewsApiClient
 import re
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
 
 """ 
      API/Scraper Calls for Websites
@@ -24,7 +27,7 @@ def wikipedia_loader(page, summary_or_text="summary", language="en"):
     elif summary_or_text == "text":            
         # get all page text
         return page_py.text
-    
+      
     
 def NewsAPI_loader(topic):
     """
@@ -80,6 +83,103 @@ def NewsAPI_loader(topic):
 
 
 """
-    add GUARDIAN_LOADER
+    Guardian API Call:
 """
 
+#Auf HTTPX umstellen. statt requests
+#Selectolax anstatt von BS. 
+
+
+def query_api(tag, page, from_date, api_key):
+    """
+    Function to query the API for a particular tag
+    returns: a response from API
+    """
+    response = requests.get("https://content.guardianapis.com/search?tag="
+                            + tag + "&from-date=" + from_date 
+                            +"&page=" + str(page) + "&page-size=200&api-key=" + api_key)
+    return response
+
+
+def get_results_for_tag(tag, from_date, api_key):
+    """
+    Function to run a for loop for results greater than 200. 
+    Calls the query_api function accordingly
+    returns: a list of JSON results
+    """
+    json_responses = []
+    response = query_api(tag, 1, from_date, api_key).json()
+    json_responses.append(response)
+    number_of_results = response['response']['total']
+    if number_of_results > 200:
+        for page in range(2, (round(number_of_results/200))+1):
+            response = query_api(tag, page, from_date, api_key).json()
+            json_responses.append(response)
+    return json_responses
+
+
+def convert_json_responses_to_df(json_responses):
+    """
+    Function to convert the list of json responses to a dataframe
+    """
+    df_results = []
+    for json in json_responses:
+        df = pd.json_normalize(json['response']['results'])
+        df_results.append(df)
+    all_df = pd.concat(df_results)
+    return all_df
+        
+def get_results_for_all_tags(tag_list, from_date, api_key):
+    tag_df_list = []
+    for tag in tag_list:
+        json_responses = get_results_for_tag(tag, from_date, api_key)
+        tag_df = convert_json_responses_to_df(json_responses)
+        tag_df_list.append(tag_df)
+    all_tag_df = pd.concat(tag_df_list)
+    return all_tag_df
+
+"""
+    Create Soup:
+        -and delete html-tags
+"""
+
+#further prep
+def html_cleaner(raw_html):
+    filtered = re.sub('<[^>]*>', "", raw_html)
+    filtered = filtered.replace("""Sign up to Business TodayGet set for the working 
+                                day – we'll point you to the all the business 
+                                news and analysis you need every morning""", "")
+    return filtered
+
+
+def get_articles(link_df):
+    filtered_article_list = []
+    for i in link_df:
+        response = requests.get(i)
+        html_doc = BeautifulSoup(response.content, 'html.parser')
+        p_content = html_doc.body.main.div.find_all("p")
+        
+        raw_text = " ".join(map(str, p_content))
+        filtered_text = html_cleaner(raw_text) 
+        
+        if len(filtered_text) > 0:
+            filtered_article_list.append(filtered_text)
+            
+    return filtered_article_list
+
+
+def guardian_loader(tag_list, from_date):
+    api_key = 'ec1a9d25-67dc-4f71-8313-589a96c548f9'
+    
+    guardian_df = get_results_for_all_tags(tag_list, from_date, api_key)
+    guardian_df.drop_duplicates(subset=['webTitle', 'webUrl'], inplace = True)
+    guardian_df['webPublicationDate'] = guardian_df['webPublicationDate'].apply(lambda x: pd.to_datetime(x))
+    
+    return get_articles(guardian_df["webUrl"])    
+    
+    
+    
+
+    
+
+    

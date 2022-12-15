@@ -1,5 +1,6 @@
 from BERTuality_loader import wikipedia_loader
 from BERTuality_loader import NewsAPI_loader
+from BERTuality_loader import guardian_loader
 from BERTuality import sentence_converter
 from BERTuality import merge_pages
 from BERTuality import make_predictions
@@ -7,7 +8,7 @@ from BERTuality import filter_list_final
 from BERTuality import keyword_creator
 
 
-
+#Wikipedia Covid Test
 """
 # load pages
 page_1 = wikipedia_loader("Coronavirus", "text")
@@ -24,6 +25,7 @@ merged_pages = merge_pages(filtered_pages)
 pred_1 = make_predictions("Covid is a [MASK]", filter_list_final(merged_pages, ["Covid", "Virus", "China"]))
 """
 
+# Wikipedia and news api test
 """
 page_6 = wikipedia_loader("Bob_Bennett", "text") 
 page_7 = NewsAPI_loader("Bob Bennett AND Robert Foster Bennett")
@@ -38,6 +40,8 @@ keywords = keyword_creator(masked_sentence, word_deletion=True, criteria="shorte
 pred_2 = make_predictions(masked_sentence, filter_list_final(merged_pages, keywords))
 """
 
+#wikipedia and news api test
+"""
 page_6 = wikipedia_loader("Niko_Kovač", "text") 
 page_7 = NewsAPI_loader("Niko Kovac")
 
@@ -51,6 +55,16 @@ keywords = keyword_creator(masked_sentence, word_deletion=True, criteria="shorte
 pred_2_keyword_creator = make_predictions(masked_sentence, filter_list_final(merged_pages, keywords))
 ### bei Keywords: Kovač problematisch, weil manche News Seiten c und andere č schreiben; deswegen Sonderzeichen weglassen bei Keyword Suche; Kova ist in Kovač und funktioniert deswegen
 pred_2_own_keywords = make_predictions(masked_sentence, filter_list_final(merged_pages, [['Niko','Kova','german','football'],['Kova','german','football'],['Kova','football']]))
+"""
+
+# guardian test
+
+guardian_collection = guardian_loader(["world/coronavirus-outbreak"], "2022-12-01")
+
+filtered_pages = sentence_converter(guardian_collection)
+merged_pages = merge_pages(filtered_pages)
+
+pred_1 = make_predictions("Covid is a [MASK]", filter_list_final(merged_pages, ["Covid", "Virus", "China"]))
 
 
 

@@ -115,7 +115,11 @@ def sentence_converter(*page_loader):
     
     filtered_information = []
     for page in page_loader:
-        filtered_information.append(split_into_sentences(page))
+        if type(page) == list:
+            for text in page:
+                filtered_information.append(split_into_sentences(text))
+        else:
+            filtered_information.append(split_into_sentences(page))
 
     return filtered_information
 
