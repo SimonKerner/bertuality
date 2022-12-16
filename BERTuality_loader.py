@@ -99,6 +99,15 @@ def query_api(page, from_date, to_date, order_by, query, api_key):
     return response
 
 
+def path_lookup_api(page, from_date, to_date, order_by, path, api_key):
+
+    response = requests.get("https://content.guardianapis.com/" + path + "?from-date="
+                            + from_date + "&to-date=" + to_date + "&page=" + str(page) 
+                            + "&page-size=200&order-by=" + order_by + "&api-key=" + api_key)
+    return response
+
+
+
 def get_results_for_query(from_date, to_date, order_by, query, api_key):
     """
     Function to run a for loop for results greater than 200. 
@@ -115,6 +124,17 @@ def get_results_for_query(from_date, to_date, order_by, query, api_key):
             json_responses.append(response)
     return json_responses
 
+def get_results_for_path_lookup(from_date, to_date, order_by, path, api_key):
+    json_responses = []
+    response = path_lookup_api(1, from_date, to_date, order_by, path, api_key).json()
+    json_responses.append(response)
+    number_of_results = response['response']['total']
+    if number_of_results > 200:
+        for page in range(2, (round(number_of_results/200))+1):
+            response = path_lookup_api(page, from_date, to_date, order_by, path, api_key).json()
+            json_responses.append(response)
+    return json_responses
+
 
 def convert_json_responses_to_df(json_responses):
     """
@@ -128,8 +148,13 @@ def convert_json_responses_to_df(json_responses):
     return all_df
 
 
-def guardian_call(from_date, to_date, query, order_by, api_key):
-    json_responses = get_results_for_query(from_date, to_date, order_by, query, api_key)
+def guardian_call(from_date, to_date, query, path, order_by, api_key):
+    
+    if query != "" and path == "":
+        json_responses = get_results_for_query(from_date, to_date, order_by, query, api_key)
+    elif query == "" and path != "":
+        json_responses = get_results_for_path_lookup(from_date, to_date, order_by, path, api_key)
+    
     guardian_df = convert_json_responses_to_df(json_responses)
     return guardian_df
 
@@ -164,10 +189,10 @@ def get_articles(link_df):
     return filtered_article_list
 
 
-def guardian_loader(from_date, to_date, query, order_by="relevance"):
+def guardian_loader(from_date, to_date, query="", path="", order_by="relevance"):
     api_key = 'ec1a9d25-67dc-4f71-8313-589a96c548f9'
     
-    guardian_df = guardian_call(from_date, to_date, query, order_by, api_key)
+    guardian_df = guardian_call(from_date, to_date, query, path, order_by, api_key)
     
     guardian_df.drop(guardian_df.loc[guardian_df['type']=="interactive"].index, inplace=True)
     guardian_df.drop(guardian_df.loc[guardian_df['type']=="liveblog"].index, inplace=True)

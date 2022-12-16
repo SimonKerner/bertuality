@@ -58,10 +58,20 @@ pred_2_own_keywords = make_predictions(masked_sentence, filter_list_final(merged
 """
 
 # guardian test
-guardian_collection, guardian_df = guardian_loader("2022-12-07", "2022-12-15", "Covid-19")
+query, query_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", query="Merkel")
+#path, path_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", path="politics")
 
-filtered_pages = sentence_converter(guardian_collection)
-merged_pages = merge_pages(filtered_pages)
+filtered_query = sentence_converter(query)
+#filtered_path = sentence_converter(path)
+
+merged_query = merge_pages(filtered_query)
+#merged_path = merge_pages(filtered_path)
+
+masked = "Chancellor Merkel is the [MASK] leader of Germany."
+key_words = ["Chancellor", "Merkel"]
+
+query_pred = make_predictions(masked, filter_list_final(merged_query, key_words))
+#path_pred = make_predictions(masked, filter_list_final(merged_path, key_words))
 
 
 
