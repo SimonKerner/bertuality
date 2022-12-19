@@ -93,9 +93,11 @@ query_pred = make_predictions(masked, filter_list_final(merged_query, key_words)
 
 
 """
-Error in Fkt. guardian_call (wenn from_date zu weit in der Vergangenheit):
-    
+Error in Fkt. guardian_call (wenn from_date zu weit in der Vergangenheit):  
 news_api_query, guardian_query, guardian_query_df = news_loader('2021-12-10', 'Olaf Scholz')
+
+Key Error in guardian_loader: (query="Niko Kovač" funktioniert)
+page_8, query_df = guardian_loader(from_date="2022-08-15", to_date="2022-12-15", query="Kovač") 
 """
 
 
