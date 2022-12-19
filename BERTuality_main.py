@@ -41,12 +41,11 @@ pred_2 = make_predictions(masked_sentence, filter_list_final(merged_pages, keywo
 """
 
 #wikipedia and news api test
-"""
+
 page_6 = wikipedia_loader("Niko_Kovač", "text") 
 page_7 = NewsAPI_loader("Niko Kovac")
 
-filtered_pages = sentence_converter(page_6)
-filtered_pages.append(page_7)               # append, weil der NewsAPI_loader eigene Satzfilter verwendet; hier gibt es andere Suffixe und Präfixe als bei Wikipedia z.B.
+filtered_pages = sentence_converter(page_6, page_7)
 merged_pages = merge_pages(filtered_pages)
 
 masked_sentence = "Niko Kovač is a german football [MASK]."
@@ -55,8 +54,8 @@ keywords = keyword_creator(masked_sentence, word_deletion=True, criteria="shorte
 pred_2_keyword_creator = make_predictions(masked_sentence, filter_list_final(merged_pages, keywords))
 ### bei Keywords: Kovač problematisch, weil manche News Seiten c und andere č schreiben; deswegen Sonderzeichen weglassen bei Keyword Suche; Kova ist in Kovač und funktioniert deswegen
 pred_2_own_keywords = make_predictions(masked_sentence, filter_list_final(merged_pages, [['Niko','Kova','german','football'],['Kova','german','football'],['Kova','football']]))
-"""
 
+"""
 # guardian test
 query, query_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", query="Scholz")
 #path, path_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", path="politics")
@@ -75,7 +74,7 @@ key_words_2 = ["Chancellor", "scholz"]
 
 query_pred = make_predictions(masked_2, filter_list_final(merged_query, key_words_2))
 #path_pred = make_predictions(masked, filter_list_final(merged_path, key_words))
-
+"""
 
 
 

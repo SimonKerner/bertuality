@@ -56,7 +56,7 @@ def NewsAPI_loader(topic):
         content.append(title)
         
     # remove distracting chars (clean sentences)
-    content_cleaned = []    
+    content_cleaned = ""    
     for element in content:
         element = re.sub("[\<].*?[\>]", "", element)    #remove all HTML Tags!
         element = element.replace('- Reuters','')
@@ -77,7 +77,7 @@ def NewsAPI_loader(topic):
         element = element.strip()
         if (not element.endswith(".") and not element.endswith("!") and not element.endswith("?")):     #add "." at end of every sentence
             element += "."
-        content_cleaned.append(element)
+        content_cleaned += element
         
     return content_cleaned
 
