@@ -7,6 +7,7 @@ from BERTuality import merge_pages
 from BERTuality import make_predictions
 from BERTuality import filter_list_final
 from BERTuality import keyword_creator
+from BERTuality import load_actuality_dataset
 
 
 #Wikipedia Covid Test
@@ -90,6 +91,12 @@ masked = "Ukraine is in a war against [MASK]."
 key_words = ["Ukraine", "war"]
 
 query_pred = make_predictions(masked, filter_list_final(merged_query, key_words))
+
+
+
+# Test load actuality_datset
+
+actuality_dataset = load_actuality_dataset()
 
 
 """

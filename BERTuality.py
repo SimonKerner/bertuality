@@ -227,14 +227,16 @@ def keyword_creator(masked_sentence, word_deletion=True, criteria="random", min_
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 
 # BERT pre-trained
-model_pre = BertForMaskedLM.from_pretrained('bert-large-uncased')
+model = BertForMaskedLM.from_pretrained('bert-large-uncased')
+
+#def learn_new_token(token_list):
 
 
 # make predictions
 def make_predictions(masked_sentence, sent_list):
     
     # pipeline pre-trained
-    fill_mask_pipeline_pre = pipeline("fill-mask", model = model_pre, tokenizer = tokenizer)
+    fill_mask_pipeline_pre = pipeline("fill-mask", model=model, tokenizer=tokenizer)
     
     #create df
     columns = ['masked', 'input', 'input + masked', 'token1', 'score1', 'token2', 'score2', 'token3', 'score3']
@@ -276,6 +278,25 @@ def make_predictions(masked_sentence, sent_list):
     pred['score3'] = score3
     
     return pred
+
+
+def load_actuality_dataset():
+    # load dataset
+    actuality_dataset = pd.read_excel (r'DS_Aktualitätsprüfung.xlsx', sheet_name = 'Gesamt Daten')
+    # filter datset
+    actuality_dataset = actuality_dataset[(actuality_dataset['Quelle'] == 'Eigenkreation') & 
+                                          ((actuality_dataset['Akt.-Ind./Wortart'] == 'Subjekt') |
+                                          (actuality_dataset['Akt.-Ind./Wortart'] == 'Objekt') |
+                                          (actuality_dataset['Akt.-Ind./Wortart'] == 'Zahl/Objekt'))]
+    # reset index, delete unnecessary columns
+    actuality_dataset = actuality_dataset.reset_index()
+    del actuality_dataset['index']
+    del actuality_dataset['Unnamed: 7']
+    del actuality_dataset['Unnamed: 8']
+    del actuality_dataset['Unnamed: 9']
+    del actuality_dataset['Unnamed: 10']
+    
+    return actuality_dataset
 
 
 """
