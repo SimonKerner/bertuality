@@ -228,18 +228,13 @@ def news_loader(from_date, topic):
     
     # call different loaders; Wikipedia not included
     # to_date could be added to NewsAPI_loader
-    news_api_page = NewsAPI_loader(from_date, topic)   # to_date is automatically the current date; from_date is never older than one month before current date (according to NewsAPI free plan)
+    news_api_query = NewsAPI_loader(from_date, topic)   # to_date is automatically the current date; from_date is never older than one month before current date (according to NewsAPI free plan)
     guardian_query, guardian_query_df = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     
-    # list of different pages (format can be str or list)
-    pages = []
-    pages.append(news_api_page)
-    pages.append(guardian_query)
-    
-    return pages
+    return news_api_query, guardian_query
 
 
-#news = news_loader('2022-12-01', 'Biden')
+#news_api_query, guardian_query = news_loader('2022-12-01', 'Biden')
 
 
 

@@ -79,15 +79,15 @@ query_pred = make_predictions(masked_2, filter_list_final(merged_query, key_word
 #path_pred = make_predictions(masked, filter_list_final(merged_path, key_words))
 """
 
-
 # Test
-news = news_loader('2022-12-10', 'Munich')
 
-filtered_query = sentence_converter(news)
+news_api_query, guardian_query = news_loader('2022-12-14', 'Ukraine')
+
+filtered_query = sentence_converter(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query)
 
-masked = "Munich is the capital of [MASK]."
-key_words = ["Munich", "capital"]
+masked = "Ukraine is in a war against [MASK]."
+key_words = ["Ukraine", "war"]
 
 query_pred = make_predictions(masked, filter_list_final(merged_query, key_words))
 
