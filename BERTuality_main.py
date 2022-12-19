@@ -81,7 +81,7 @@ query_pred = make_predictions(masked_2, filter_list_final(merged_query, key_word
 
 # Test
 
-news_api_query, guardian_query = news_loader('2022-12-14', 'Ukraine')
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-17', 'Ukraine')
 
 filtered_query = sentence_converter(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query)
@@ -92,6 +92,11 @@ key_words = ["Ukraine", "war"]
 query_pred = make_predictions(masked, filter_list_final(merged_query, key_words))
 
 
+"""
+Error in Fkt. guardian_call (wenn from_date zu weit in der Vergangenheit):
+    
+news_api_query, guardian_query, guardian_query_df = news_loader('2021-12-10', 'Olaf Scholz')
+"""
 
 
 

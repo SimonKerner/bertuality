@@ -231,7 +231,7 @@ def news_loader(from_date, topic):
     news_api_query = NewsAPI_loader(from_date, topic)   # to_date is automatically the current date; from_date is never older than one month before current date (according to NewsAPI free plan)
     guardian_query, guardian_query_df = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     
-    return news_api_query, guardian_query
+    return news_api_query, guardian_query, guardian_query_df
 
 
 #news_api_query, guardian_query = news_loader('2022-12-01', 'Biden')
