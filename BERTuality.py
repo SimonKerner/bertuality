@@ -100,7 +100,7 @@ def filter_list_final(sent_list, twod_list):    #twod_list = 2 dimensional list,
     return result
         
    
-def remove_too_long_sentences(sent_list):
+def remove_too_long_sentences(sent_list, tokenizer):
     for sent in sent_list:
         encoding = tokenizer.encode(sent)
         if len((tokenizer.convert_ids_to_tokens(encoding))) > 102:    #512/5 = 102; max token length: 512, each sentence is taken 5 times
@@ -125,13 +125,13 @@ def sentence_converter(*page_loader):
 
 
 # used to merge the list of pages into one list with all information
-def merge_pages(filtered_pages):
+def merge_pages(filtered_pages, tokenizer):
     merged = []
     for page in filtered_pages:
         for text in page:
             merged.append(text)
    
-    merged = remove_too_long_sentences(merged)    
+    merged = remove_too_long_sentences(merged, tokenizer)    
     
     return merged
 
@@ -222,18 +222,17 @@ def keyword_creator(masked_sentence, word_deletion=True, criteria="random", min_
     BERT :
         
 """
-
+"""
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 
-# BERT pre-trained
+# model: BERT pre-trained
 model = BertForMaskedLM.from_pretrained('bert-large-uncased')
-
-#def learn_new_token(token_list):
+"""
 
 
 # make predictions
-def make_predictions(masked_sentence, sent_list):
+def make_predictions(masked_sentence, sent_list, model, tokenizer):
     
     # pipeline pre-trained
     fill_mask_pipeline_pre = pipeline("fill-mask", model=model, tokenizer=tokenizer)
@@ -297,6 +296,15 @@ def load_actuality_dataset():
     del actuality_dataset['Unnamed: 10']
     
     return actuality_dataset
+
+
+def learn_new_token(dataset, model, tokenizer):
+    # create list of gold token from given dataset
+    gold_token = list(dataset['Gold'])
+    
+    num_added_toks = tokenizer.add_tokens(gold_token)
+    model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
+    
 
 
 """

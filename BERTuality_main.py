@@ -1,3 +1,4 @@
+from transformers import BertTokenizer, BertForMaskedLM, pipeline
 from BERTuality_loader import wikipedia_loader
 from BERTuality_loader import NewsAPI_loader
 from BERTuality_loader import guardian_loader
@@ -8,7 +9,13 @@ from BERTuality import make_predictions
 from BERTuality import filter_list_final
 from BERTuality import keyword_creator
 from BERTuality import load_actuality_dataset
+from BERTuality import learn_new_token
 
+# tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
+
+# model: BERT pre-trained
+model = BertForMaskedLM.from_pretrained('bert-large-uncased')
 
 #Wikipedia Covid Test
 """
@@ -67,7 +74,7 @@ query, query_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", 
 filtered_query = sentence_converter(query)
 #filtered_path = sentence_converter(path)
 
-merged_query = merge_pages(filtered_query)
+merged_query = merge_pages(filtered_query, tokenizer)
 #merged_path = merge_pages(filtered_path)
 
 masked = "Chancellor Merkel is the [MASK] leader of Germany."
@@ -76,27 +83,33 @@ key_words = ["Chancellor", "Merkel"]
 key_words_2 = ["Chancellor", "scholz"]
 
 
-query_pred = make_predictions(masked_2, filter_list_final(merged_query, key_words_2))
+query_pred = make_predictions(masked_2, filter_list_final(merged_query, key_words_2), model, tokenizer)
 #path_pred = make_predictions(masked, filter_list_final(merged_path, key_words))
 """
 
-# Test
-
+# Test news_loader
+"""
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-17', 'Ukraine')
 
 filtered_query = sentence_converter(news_api_query, guardian_query)
-merged_query = merge_pages(filtered_query)
+merged_query = merge_pages(filtered_query, tokenizer)
 
 masked = "Ukraine is in a war against [MASK]."
 key_words = ["Ukraine", "war"]
 
-query_pred = make_predictions(masked, filter_list_final(merged_query, key_words))
+query_pred = make_predictions(masked, filter_list_final(merged_query, key_words), model, tokenizer)
+"""
 
 
-
-# Test load actuality_datset
-
+# Test learn_new_token
+"""
 actuality_dataset = load_actuality_dataset()
+learn_new_token(actuality_dataset, model, tokenizer)
+
+sample = 'macron trudeau scholz meloni kishida sunak diaz alibaba AT&T uber servicenow'
+encoding_1 = tokenizer.encode(sample)
+token_1 = tokenizer.convert_ids_to_tokens(encoding_1)
+"""
 
 
 """
