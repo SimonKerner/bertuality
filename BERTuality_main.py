@@ -1,6 +1,7 @@
 from BERTuality_loader import wikipedia_loader
 from BERTuality_loader import NewsAPI_loader
 from BERTuality_loader import guardian_loader
+from BERTuality_loader import news_loader
 from BERTuality import sentence_converter
 from BERTuality import merge_pages
 from BERTuality import make_predictions
@@ -41,22 +42,24 @@ pred_2 = make_predictions(masked_sentence, filter_list_final(merged_pages, keywo
 """
 
 #wikipedia and news api test
-
+"""
 page_6 = wikipedia_loader("Niko_Kovač", "text") 
-page_7 = NewsAPI_loader("Niko Kovac")
+page_7 = NewsAPI_loader("2022-08-01", "Niko Kovac")
+page_8, query_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", query="Kovac")
 
-filtered_pages = sentence_converter(page_6, page_7)
+filtered_pages = sentence_converter(page_6, page_7, page_8)
 merged_pages = merge_pages(filtered_pages)
 
 masked_sentence = "Niko Kovač is a german football [MASK]."
 keywords = keyword_creator(masked_sentence, word_deletion=True, criteria="shortest", min_key_words=2)
 
-pred_2_keyword_creator = make_predictions(masked_sentence, filter_list_final(merged_pages, keywords))
+#pred_2_keyword_creator = make_predictions(masked_sentence, filter_list_final(merged_pages, keywords))
 ### bei Keywords: Kovač problematisch, weil manche News Seiten c und andere č schreiben; deswegen Sonderzeichen weglassen bei Keyword Suche; Kova ist in Kovač und funktioniert deswegen
 pred_2_own_keywords = make_predictions(masked_sentence, filter_list_final(merged_pages, [['Niko','Kova','german','football'],['Kova','german','football'],['Kova','football']]))
-
 """
+
 # guardian test
+"""
 query, query_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", query="Scholz")
 #path, path_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", path="politics")
 
@@ -75,6 +78,19 @@ key_words_2 = ["Chancellor", "scholz"]
 query_pred = make_predictions(masked_2, filter_list_final(merged_query, key_words_2))
 #path_pred = make_predictions(masked, filter_list_final(merged_path, key_words))
 """
+
+
+# Test
+news = news_loader('2022-12-10', 'Munich')
+
+filtered_query = sentence_converter(news)
+merged_query = merge_pages(filtered_query)
+
+masked = "Munich is the capital of [MASK]."
+key_words = ["Munich", "capital"]
+
+query_pred = make_predictions(masked, filter_list_final(merged_query, key_words))
+
 
 
 

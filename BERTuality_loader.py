@@ -4,6 +4,8 @@ import re
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from datetime import date
+from dateutil.relativedelta import relativedelta
 
 """ 
      API/Scraper Calls for Websites
@@ -29,7 +31,7 @@ def wikipedia_loader(page, summary_or_text="summary", language="en"):
         return page_py.text
       
     
-def NewsAPI_loader(topic):
+def NewsAPI_loader(from_param, topic):
     """
         topic: Advanced search is supported here:
         Surround phrases with quotes (") for exact match.
@@ -41,8 +43,12 @@ def NewsAPI_loader(topic):
     # Init
     newsapi = NewsApiClient(api_key='be8ca28108a44c49bc15e879d0d4c5dd')
     
+    # from_param: if more than a month ago, an error occurs --> change to exactly one month ago
+    if (from_param < (str(date.today() - relativedelta(months = 1)))):
+        from_param = (str(date.today() - relativedelta(months = 1)))
+    
     # get overview
-    overview = newsapi.get_everything(q=topic, language='en', sort_by='relevancy')
+    overview = newsapi.get_everything(q=topic, from_param=from_param, language='en', sort_by='relevancy')
     
     # get all articles
     all_articles = overview['articles']
@@ -206,6 +212,37 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
     #guardian_df['webPublicationDate'] = guardian_df['webPublicationDate'].apply(lambda x: pd.to_datetime(x))
     
     return get_articles(guardian_df["webUrl"]), guardian_df
+
+
+
+
+
+"""
+    overall News loader
+"""
+
+def news_loader(from_date, topic):
+    
+    # get current date
+    to_date = date.today().strftime("%Y-%m-%d")
+    
+    # call different loaders; Wikipedia not included
+    # to_date could be added to NewsAPI_loader
+    news_api_page = NewsAPI_loader(from_date, topic)   # to_date is automatically the current date; from_date is never older than one month before current date (according to NewsAPI free plan)
+    guardian_query, guardian_query_df = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
+    
+    # list of different pages (format can be str or list)
+    pages = []
+    pages.append(news_api_page)
+    pages.append(guardian_query)
+    
+    return pages
+
+
+#news = news_loader('2022-12-01', 'Biden')
+
+
+
     
     
     
