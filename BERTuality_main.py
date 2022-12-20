@@ -10,6 +10,7 @@ from BERTuality import filter_list_final
 from BERTuality import keyword_creator
 from BERTuality import load_actuality_dataset
 from BERTuality import learn_new_token
+from BERTuality import learn_all_new_gold_token
 
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
@@ -100,18 +101,6 @@ key_words = ["Ukraine", "war"]
 query_pred = make_predictions(masked, filter_list_final(merged_query, key_words), model, tokenizer)
 """
 
-
-# Test learn_new_token
-"""
-actuality_dataset = load_actuality_dataset()
-learn_new_token(actuality_dataset, model, tokenizer)
-
-sample = 'macron trudeau scholz meloni kishida sunak diaz alibaba AT&T uber servicenow'
-encoding_1 = tokenizer.encode(sample)
-token_1 = tokenizer.convert_ids_to_tokens(encoding_1)
-"""
-
-
 """
 Error in Fkt. guardian_call (wenn from_date zu weit in der Vergangenheit):  
 news_api_query, guardian_query, guardian_query_df = news_loader('2021-12-10', 'Olaf Scholz')
@@ -119,6 +108,58 @@ news_api_query, guardian_query, guardian_query_df = news_loader('2021-12-10', 'O
 Key Error in guardian_loader: (query="Niko Kovač" funktioniert)
 page_8, query_df = guardian_loader(from_date="2022-08-15", to_date="2022-12-15", query="Kovač") 
 """
+
+
+# Test learn_all_new_token (for gold token in dataset)
+"""
+actuality_dataset = load_actuality_dataset()
+learn_all_new_gold_token(actuality_dataset, model, tokenizer)
+
+sample = 'macron trudeau scholz meloni kishida sunak diaz alibaba AT&T uber servicenow'
+encoding_1 = tokenizer.encode(sample)
+token_1 = tokenizer.convert_ids_to_tokens(encoding_1)
+"""
+
+
+# Test learn_new_token
+"""
+sample = ["abc def ghi.", "jkl"]
+learn_new_token(sample, model, tokenizer)
+
+encoding_sample = tokenizer.encode(sample[0])
+encoding_gold = tokenizer.encode(sample[1])
+token_sample = tokenizer.convert_ids_to_tokens(encoding_sample)
+token_gold = tokenizer.convert_ids_to_tokens(encoding_gold)
+"""
+
+
+# Test
+
+# load actuality_dataset
+actuality_dataset = load_actuality_dataset()
+
+# create sample and learn new token from sample
+sample = ["Chancellor [MASK] is the actual leader of Germany.", "Scholz"]
+learn_new_token(sample, model, tokenizer)
+
+# test encoling
+#encoding = tokenizer.encode('Olaf Scholz')
+#token = tokenizer.convert_ids_to_tokens(encoding)
+
+# create key words
+key_words = ["chancellor", "germany"]
+
+# load news from guardian and news_api
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-05', 'chancellor germany')
+filtered_query = sentence_converter(news_api_query, guardian_query)
+merged_query = merge_pages(filtered_query, tokenizer)
+
+# make prediction
+query_pred = make_predictions(sample[0], filter_list_final(merged_query, key_words), model, tokenizer)
+
+
+
+
 
 
 

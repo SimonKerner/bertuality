@@ -154,7 +154,7 @@ def keyword_creator(masked_sentence, word_deletion=True, criteria="random", min_
         
         for i in range(min_key_words, len(temp_key_list)): 
     
-            # delete a word from masked_sentence chosen one of many criterias
+            # delete a word from masked_sentence chosen one of many criteria
             if criteria == "random":
                 
                 random_word = temp_key_list[random.randint(0, len(temp_key_list)-1)]
@@ -298,11 +298,25 @@ def load_actuality_dataset():
     return actuality_dataset
 
 
-def learn_new_token(dataset, model, tokenizer):
+# learn all gold token in given dataset
+def learn_all_new_gold_token(dataset, model, tokenizer):
     # create list of gold token from given dataset
     gold_token = list(dataset['Gold'])
     
+    # add new token to tokenizer
     num_added_toks = tokenizer.add_tokens(gold_token)
+    model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
+  
+    
+# learn one new gold token in sample, sample has to look like this: ['sentence', 'gold token']    
+def learn_new_token(sample, model, tokenizer):
+    # create list of all token form given sample ['sentence', 'gold token']
+    gold_token = [sample[1]]
+    other_token = sample[0].split()
+    new_token = gold_token + other_token
+    
+    # add new token to tokenizer
+    num_added_toks = tokenizer.add_tokens(new_token)
     model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
     
 
