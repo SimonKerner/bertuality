@@ -218,6 +218,49 @@ def keyword_creator(masked_sentence, word_deletion=True, criteria="random", min_
         return key_list
 
 
+# further input sentence preparation
+
+def spec_char_deletion(input_sentences):
+    clean_sentences = []
+    for i in input_sentences:
+        clean = re.sub("r'\W+'",' ', i.lower())
+        clean = clean.replace(".", "")
+        clean = clean.replace(",", "")
+        clean = clean.replace("'s", "")
+        clean = clean.replace("’s", "")
+        clean_sentences.append(clean)
+    return clean_sentences
+
+
+def keyword_focus(input_sentences, key_words, padding):
+    filtered_input = []
+    
+    clean_input = spec_char_deletion(input_sentences)
+    
+    for sentence in clean_input:
+        tokens = sentence.split()
+        
+        #find positions of key_words
+        positions = []
+        for word in key_words:
+            positions.append(tokens.index(word.lower()))  
+        
+        #add padding to positions
+        left_pos, right_pos = min(positions), max(positions)
+        left_pad, right_pad = left_pos - padding, right_pos + padding
+        
+        # check if pad is out of bound and if set to max available value
+        if left_pad < 0:
+            left_pad = 0
+        if right_pad > len(tokens):
+            right_pad = len(tokens)
+            
+        focus = tokens[left_pad : right_pad]
+        filtered_input.append(" ".join(focus))
+    
+    return filtered_input
+
+
 """
     BERT :
         
