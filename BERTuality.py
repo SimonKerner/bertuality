@@ -313,7 +313,7 @@ def learn_new_token(sample, model, tokenizer):
     # create list of all token form given sample ['sentence', 'gold token']
     gold_token = [sample[1]]
     other_token = sample[0].split()
-    new_token = gold_token + other_token
+    new_token = gold_token + other_token #1st new token gets id 30522
     
     # add new token to tokenizer
     num_added_toks = tokenizer.add_tokens(new_token)
