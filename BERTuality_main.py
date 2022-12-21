@@ -8,6 +8,7 @@ from BERTuality import merge_pages
 from BERTuality import make_predictions
 from BERTuality import filter_list_final
 from BERTuality import keyword_creator
+from BERTuality import keyword_focus
 from BERTuality import load_actuality_dataset
 from BERTuality import learn_new_token
 from BERTuality import learn_all_new_gold_token
@@ -154,8 +155,14 @@ news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-05', 'c
 filtered_query = sentence_converter(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
+#filter information out of full article list
+info_query = filter_list_final(merged_query, key_words)
+
+# focus on relevant part of sentence
+focus_query = keyword_focus(info_query, key_words, 5)
+
 # make prediction
-query_pred = make_predictions(sample[0], filter_list_final(merged_query, key_words), model, tokenizer)
+query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
 
 
 
