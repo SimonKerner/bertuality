@@ -140,7 +140,7 @@ token_gold = tokenizer.convert_ids_to_tokens(encoding_gold)
 actuality_dataset = load_actuality_dataset()
 
 # create sample and learn new token from sample
-sample = ["Chancellor [MASK] is the actual leader of Germany.", "Scholz"]
+sample = ["Ukraine is in a war against [MASK].", "Russia"]
 learn_new_token(sample, model, tokenizer)
 
 # test encoling
@@ -148,7 +148,7 @@ learn_new_token(sample, model, tokenizer)
 #token = tokenizer.convert_ids_to_tokens(encoding)
 
 # create key words
-key_words = ["chancellor", "germany"]
+key_words = ["ukraine", "war"]
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-05', 'chancellor germany')
@@ -159,10 +159,10 @@ merged_query = merge_pages(filtered_query, tokenizer)
 info_query = filter_list_final(merged_query, key_words)
 
 # focus on relevant part of sentence
-focus_query = keyword_focus(info_query, key_words, 5)
+#focus_query = keyword_focus(info_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
+query_pred = make_predictions(sample[0], info_query, model, tokenizer)
 
 
 
