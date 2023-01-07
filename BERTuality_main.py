@@ -134,10 +134,10 @@ token_gold = tokenizer.convert_ids_to_tokens(encoding_gold)
 """
 
 
-# Test
-
+# Test 1
+"""
 # load actuality_dataset
-actuality_dataset = load_actuality_dataset()
+#actuality_dataset = load_actuality_dataset()
 
 # create sample and learn new token from sample
 sample = ["Ukraine is in a war against [MASK].", "Russia"]
@@ -151,7 +151,31 @@ learn_new_token(sample, model, tokenizer)
 key_words = ["ukraine", "war"]
 
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-05', 'chancellor germany')
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-05', 'ukraine war')
+filtered_query = sentence_converter(news_api_query, guardian_query)
+merged_query = merge_pages(filtered_query, tokenizer)
+
+#filter information out of full article list
+info_query = filter_list_final(merged_query, key_words)
+
+# focus on relevant part of sentence
+#focus_query = keyword_focus(info_query, key_words, 5)
+
+# make prediction
+query_pred = make_predictions(sample[0], info_query, model, tokenizer)
+"""
+
+# Test 2
+
+# create sample and learn new token from sample
+sample = ["Barack Obama [MASK] the president of the United States of America.", "was"]
+learn_new_token(sample, model, tokenizer)
+
+# create key words
+key_words = ["obama", "president"]
+
+# load news from guardian and news_api
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-09-05', 'obama president')
 filtered_query = sentence_converter(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
