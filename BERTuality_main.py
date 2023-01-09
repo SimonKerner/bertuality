@@ -12,6 +12,7 @@ from BERTuality import keyword_focus
 from BERTuality import load_actuality_dataset
 from BERTuality import learn_new_token
 from BERTuality import learn_all_new_gold_token
+from BERTuality import ner_keywords
 
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
@@ -172,7 +173,10 @@ sample = ["Barack Obama [MASK] the president of the United States of America.", 
 learn_new_token(sample, model, tokenizer)
 
 # create key words
-key_words = ["obama", "president"]
+# key_words = ["obama", "president"]
+
+# get NER keywords
+ner_keywords = ner_keywords(sample)
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-09-05', 'obama president')
@@ -180,7 +184,7 @@ filtered_query = sentence_converter(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
 #filter information out of full article list
-info_query = filter_list_final(merged_query, key_words)
+info_query = filter_list_final(merged_query, ner_keywords)
 
 # focus on relevant part of sentence
 #focus_query = keyword_focus(info_query, key_words, 5)
