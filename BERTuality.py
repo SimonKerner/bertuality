@@ -364,35 +364,6 @@ def learn_new_token(sample, model, tokenizer):
     
 
 
-"""
-    TODO:
-        Delete WikiToList()
-        instead give text_filtered or merged_text
-        
-        potential main function for data preperation 
-        (load page/s, filter page/s, (optional merge pages after filter))
-        
-        --Create Pipeline
-"""
-
-"""
-    MAIN
-
-def main(*pages):
-    try:
-        # wikipedia_loader() -- insert pages -- load api call -- 
-        filtered_texts = text_filter(*pages)
-        merged_texts = merge_pages(filtered_texts)
-    except:
-        print("error occured")
-    
-    
-    
-        
-
-if __name__ == "__main__":
-    main("barack_obama", "joe_biden")
-"""
 
 
 
