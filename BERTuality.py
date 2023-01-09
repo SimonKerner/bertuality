@@ -270,12 +270,13 @@ def ner_keywords(sample, ner_model="bert-base-NER"):
     tokenizer = AutoTokenizer.from_pretrained("dslim/" + ner_model)
     model = AutoModelForTokenClassification.from_pretrained("dslim/" + ner_model)
     nlp = pipeline("ner", model = model, tokenizer=tokenizer)
+    sample[0] = sample[0].replace(".", "")
 
     learn_new_token(sample, model, tokenizer)
-    
     ner_results = nlp(sample)
     
     return [i.get("word") for i in ner_results[0]]
+
 
 """
     BERT :
