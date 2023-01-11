@@ -153,7 +153,7 @@ learn_new_token(sample, model, tokenizer)
 key_words = ["ukraine", "war"]
 
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-05', 'ukraine war')
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-05', key_words)
 filtered_query = sentence_converter(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
@@ -168,7 +168,7 @@ query_pred = make_predictions(sample[0], info_query, model, tokenizer)
 """
 
 # Test 2
-
+"""
 # create sample and learn new token from sample
 sample = ["Barack Obama [MASK] the president of the United States of America.", "was"]
 learn_new_token(sample, model, tokenizer)
@@ -182,7 +182,7 @@ ner_keywords = ner_keywords(sample)
 pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-15', 'obama president')
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-15', 'key_words')
 filtered_query = sentence_converter(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
@@ -194,6 +194,42 @@ info_query = filter_list_final(merged_query, key_words)
 
 # make prediction
 query_pred = make_predictions(sample[0], info_query, model, tokenizer)
+"""
+
+
+# Test 3 
+
+# create sample and learn new token from sample
+sample = ["Daniel Zhang is the chief executive officer of [MASK] group.", "alibaba"]
+learn_new_token(sample, model, tokenizer)
+
+# create key words
+#key_words = ["obama", "president"]
+
+# get NER keywords
+#ner_keywords = ner_keywords(sample)
+# get POS keywords
+pos_keywords = pos_keywords(sample)
+
+# load news from guardian and news_api
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-20', pos_keywords)
+filtered_query = sentence_converter(news_api_query, guardian_query)
+merged_query = merge_pages(filtered_query, tokenizer)
+
+#filter information out of full article list
+info_query = filter_list_final(merged_query, pos_keywords)
+
+# focus on relevant part of sentence
+#focus_query = keyword_focus(info_query, key_words, 5)
+
+# make prediction
+query_pred = make_predictions(sample[0], info_query, model, tokenizer)
+
+
+"""
+    Error bei query = 'football':
+    test_query, test_query_df = guardian_loader(from_date="2022-12-20", to_date="2023-01-10", query="football")
+"""
 
 
 

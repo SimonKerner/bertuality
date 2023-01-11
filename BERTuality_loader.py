@@ -221,7 +221,13 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
     overall News loader
 """
 
-def news_loader(from_date, topic):
+def news_loader(from_date, topic_list):
+    
+    # create string from topic
+    topic = ""
+    for word in topic_list:
+        topic += word + " "
+    topic = topic.lower().strip()
     
     # get current date
     to_date = date.today().strftime("%Y-%m-%d")
