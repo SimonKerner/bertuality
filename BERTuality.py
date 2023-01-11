@@ -3,6 +3,7 @@ from transformers import AutoTokenizer, AutoModelForTokenClassification
 import pandas as pd
 import random
 import re
+import nltk
 
 """
     Data Preparation
@@ -277,6 +278,18 @@ def ner_keywords(sample, ner_model="bert-base-NER"):
     
     return [i.get("word") for i in ner_results[0]]
 
+
+# create keywords by POS tagging (= Part of speech)
+def pos_keywords(sample):
+    sample = sample[0].replace("[MASK]", "")
+    # create token and pos-tags
+    token = nltk.word_tokenize(sample)
+    pos_tags = nltk.pos_tag(token) 
+    # filter words: only take nouns  (NN, NNP, NNS, NNPS)
+    key_pos_tags = [x for x in pos_tags if x[1] == "NN" or x[1] == "NNP" or x[1] == "NNS" or x[1] == "NNPS"]
+    
+    key_words = [x[0] for x in key_pos_tags]
+    return key_words
 
 """
     BERT :
