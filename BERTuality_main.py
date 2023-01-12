@@ -200,11 +200,11 @@ query_pred = make_predictions(sample[0], info_query, model, tokenizer)
 # Test 3 
 
 # create sample and learn new token from sample
-sample = ["Prime Minister [MASK] is the actual leader of Canada.", "Trudeau"]
+sample = ["Daniel Zhang is the chief executive officer of [MASK] group.", "alibaba"]
 learn_new_token(sample, model, tokenizer)
 
 # create key words
-key_words = ['minister', 'canada']
+key_words = ['zhang','alibaba']
 
 # get NER keywords
 #ner_keywords = ner_keywords(sample)
@@ -212,7 +212,7 @@ key_words = ['minister', 'canada']
 pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-01', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
+Tim Cook is the CEO of [MASK].news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-15', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
 filtered_query = sentence_converter(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
