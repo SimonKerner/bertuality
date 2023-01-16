@@ -221,31 +221,59 @@ def keyword_creator(masked_sentence, word_deletion=True, criteria="random", min_
 
 
 # further input sentence preparation
-
 def spec_char_deletion(input_sentences):
     clean_sentences = []
     for i in input_sentences:
-        clean = re.sub("r'\W+'",' ', i.lower())
+        clean = re.sub("r'\W+'",' ', i)
         clean = clean.replace(".", "")
         clean = clean.replace(",", "")
-        clean = clean.replace("'s", "")
-        clean = clean.replace("’s", "")
+        clean = clean.replace(":", "")
         clean_sentences.append(clean)
     return clean_sentences
 
 
-def keyword_focus(input_sentences, key_words, padding):
+def keyword_focus(input_sentences, key_words, padding=0):
     filtered_input = []
     
-    clean_input = spec_char_deletion(input_sentences)
+    if len(input_sentences) == 0:
+        return filtered_input
+    
+    clean_input = spec_char_deletion(input_sentences)  #relevance?
     
     for sentence in clean_input:
+        sentence = sentence.lower()
         tokens = sentence.split()
         
         #find positions of key_words
         positions = []
-        for word in key_words:
-            positions.append(tokens.index(word.lower()))  
+        for word in key_words: 
+            word = word.lower()
+            
+            error = True
+            case = 0
+            while(error):
+                try:
+                    positions.append(tokens.index(word))          # find exact same word
+                except ValueError:
+                    if case == 0:           #word too long obama is part of obama-era
+                        found = False
+                        for i in tokens:  
+                            if word in i:
+                                found = True
+                                tokens[tokens.index(i)] = word          # obama-era =set_to> obama
+                                break
+                        if not found:
+                            case = 1
+                    
+                    elif case == 1:                                           # word is too short =shorten_keyword>
+                        if len(word) > 0:      
+                            word = word[:-1]
+                        else:
+                            error = False # word is not in sentence
+                else:
+                    #print(word) # word found in list
+                    error = False
+        #print()
         
         #add padding to positions
         left_pos, right_pos = min(positions), max(positions)
@@ -257,10 +285,11 @@ def keyword_focus(input_sentences, key_words, padding):
         if right_pad > len(tokens):
             right_pad = len(tokens)
             
-        focus = tokens[left_pad : right_pad]
+        focus = tokens[left_pad : right_pad + 1]
         filtered_input.append(" ".join(focus))
-    
+        filtered_input[-1] = filtered_input[-1] + "."
     return filtered_input
+
 
 """
     NER :
