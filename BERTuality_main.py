@@ -201,7 +201,7 @@ query_pred = make_predictions(sample[0], info_query, model, tokenizer)
 
 # create sample and learn new token from sample
 sample = ["Daniel Zhang is the chief executive officer of [MASK] group.", "alibaba"]
-learn_new_token(sample, model, tokenizer)
+#learn_new_token(sample, model, tokenizer)
 
 # create key words
 key_words = ['zhang','alibaba']
@@ -212,7 +212,7 @@ key_words = ['zhang','alibaba']
 pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
-Tim Cook is the CEO of [MASK].news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-15', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
 filtered_query = nltk_sentence_split(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
@@ -220,19 +220,18 @@ merged_query = merge_pages(filtered_query, tokenizer)
 info_query = filter_list_final(merged_query, key_words)
 
 # focus on relevant part of sentence
-#focus_query = keyword_focus(info_query, key_words, 5)
+focus_query = keyword_focus(info_query, key_words, 5)
 
 # make prediction
-#query_pred = make_predictions(sample[0], info_query, model, tokenizer)
-
+query_pred = make_predictions(sample[0], info_query, model, tokenizer)
 
 """
-    Error bei query = 'football', 'prime'
-    test_query, test_query_df = guardian_loader(from_date="2022-12-20", to_date="2023-01-10", query="football")
-    test_query, test_query_df = guardian_loader(from_date="2022-12-20", to_date="2023-01-10", query="prime")
+    #Error bei query = 'football', 'prime'
+    #test_query, test_query_df = guardian_loader(from_date="2023-01-01", to_date="2023-01-05", query="football")
+    #test_query, test_query_df = guardian_loader(from_date="2022-12-20", to_date="2023-01-10", query="prime")
 """
 
-
+#actuality_dataset = load_actuality_dataset()
 
 
 
