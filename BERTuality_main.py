@@ -3,7 +3,7 @@ from BERTuality_loader import wikipedia_loader
 from BERTuality_loader import NewsAPI_loader
 from BERTuality_loader import guardian_loader
 from BERTuality_loader import news_loader
-from BERTuality import sentence_converter
+from BERTuality import nltk_sentence_split
 from BERTuality import merge_pages
 from BERTuality import make_predictions
 from BERTuality import filter_list_final
@@ -31,7 +31,7 @@ page_4 = wikipedia_loader("COVID-19_pandemic", "text")
 page_5 = wikipedia_loader("COVID-19_pandemic_in_Europe", "text")
 
 # filter pages
-filtered_pages = sentence_converter(page_1, page_2, page_3, page_4, page_5)
+filtered_pages = nltk_sentence_split(page_1, page_2, page_3, page_4, page_5)
 merged_pages = merge_pages(filtered_pages)
 
 # predict
@@ -43,7 +43,7 @@ pred_1 = make_predictions("Covid is a [MASK]", filter_list_final(merged_pages, [
 page_6 = wikipedia_loader("Bob_Bennett", "text") 
 page_7 = NewsAPI_loader("Bob Bennett AND Robert Foster Bennett")
 
-filtered_pages = sentence_converter(page_6)
+filtered_pages = nltk_sentence_split(page_6)
 filtered_pages.append(page_7)               # append, weil der NewsAPI_loader eigene Satzfilter verwendet; hier gibt es andere Suffixe und Präfixe als bei Wikipedia z.B.
 merged_pages = merge_pages(filtered_pages)
 
@@ -59,7 +59,7 @@ page_6 = wikipedia_loader("Niko_Kovač", "text")
 page_7 = NewsAPI_loader("2022-08-01", "Niko Kovac")
 page_8, query_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", query="Kovac")
 
-filtered_pages = sentence_converter(page_6, page_7, page_8)
+filtered_pages = nltk_sentence_split(page_6, page_7, page_8)
 merged_pages = merge_pages(filtered_pages)
 
 masked_sentence = "Niko Kovač is a german football [MASK]."
@@ -75,8 +75,8 @@ pred_2_own_keywords = make_predictions(masked_sentence, filter_list_final(merged
 query, query_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", query="Scholz")
 #path, path_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", path="politics")
 
-filtered_query = sentence_converter(query)
-#filtered_path = sentence_converter(path)
+filtered_query = nltk_sentence_split(query)
+#filtered_path = nltk_sentence_split(path)
 
 merged_query = merge_pages(filtered_query, tokenizer)
 #merged_path = merge_pages(filtered_path)
@@ -95,7 +95,7 @@ query_pred = make_predictions(masked_2, filter_list_final(merged_query, key_word
 """
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-17', 'Ukraine')
 
-filtered_query = sentence_converter(news_api_query, guardian_query)
+filtered_query = nltk_sentence_split(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
 masked = "Ukraine is in a war against [MASK]."
@@ -154,7 +154,7 @@ key_words = ["ukraine", "war"]
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-05', key_words)
-filtered_query = sentence_converter(news_api_query, guardian_query)
+filtered_query = nltk_sentence_split(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
 #filter information out of full article list
@@ -183,7 +183,7 @@ pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-15', 'key_words')
-filtered_query = sentence_converter(news_api_query, guardian_query)
+filtered_query = nltk_sentence_split(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
 #filter information out of full article list
@@ -213,7 +213,7 @@ pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
 Tim Cook is the CEO of [MASK].news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-15', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
-filtered_query = sentence_converter(news_api_query, guardian_query)
+filtered_query = nltk_sentence_split(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
 #filter information out of full article list

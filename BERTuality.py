@@ -4,13 +4,14 @@ import pandas as pd
 import random
 import re
 import nltk
+from nltk import tokenize
 
 """
     Data Preparation
         - Split Sentences 
         - Filter Sentences with custom criteria
 """
-
+"""
 # https://stackoverflow.com/a/31505798 - and edited
 def split_into_sentences(text):
     # prefixes for split function
@@ -50,6 +51,7 @@ def split_into_sentences(text):
     sentences = [s.strip() for s in sentences]
     
     return sentences
+"""
 
 # Maxi        
 def filterForOneWord(sent_list, term):  
@@ -110,7 +112,7 @@ def remove_too_long_sentences(sent_list, tokenizer):
             
     return sent_list
     
-
+"""
 # overall text_filter for page loader  
 def sentence_converter(*page_loader):
     # list holds many pages
@@ -122,6 +124,21 @@ def sentence_converter(*page_loader):
                 filtered_information.append(split_into_sentences(text))
         else:
             filtered_information.append(split_into_sentences(page))
+
+    return filtered_information
+"""
+
+# overall text_filter for page loader  
+def nltk_sentence_split(*page_loader):
+    # list holds many pages
+    
+    filtered_information = []
+    for page in page_loader:
+        if type(page) == list:
+            for text in page:
+                filtered_information.append(tokenize.sent_tokenize(text))
+        else:
+            filtered_information.append(tokenize.sent_tokenize(text))
 
     return filtered_information
 
