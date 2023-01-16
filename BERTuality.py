@@ -309,8 +309,9 @@ def keyword_focus(input_sentences, key_words, padding=0):
 
 
 """
-    NER :
+    POS & NER Keyword Creation:
         - output with keywords from sample sentence
+        - prefered POS -> faster and more accurate
 """
 
 def ner_keywords(sample, ner_model="bert-base-NER"):
