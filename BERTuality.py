@@ -399,6 +399,18 @@ def make_predictions(masked_sentence, sent_list, model, tokenizer):
     return pred
 
 
+def simple_pred_results(pred_query):
+    results = pd.DataFrame(columns=["Token", "Frequency", "max_score", "min_score", "mean_score", "sum_up_score"])
+    results["Token"] = pred_query["token1"].unique()
+    results["Frequency"] = results["Token"].map(pred_query["token1"].value_counts())
+    results["max_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].max())
+    results["min_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].min())
+    results["mean_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].mean())
+    results["sum_up_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].sum())
+    results = results.sort_values(by=["sum_up_score"], ascending=False, ignore_index=True)
+    return results
+
+
 def load_actuality_dataset():
     # load dataset
     actuality_dataset = pd.read_excel (r'DS_Aktualitätsprüfung.xlsx', sheet_name = 'Gesamt Daten')
