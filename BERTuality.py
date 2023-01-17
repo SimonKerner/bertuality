@@ -138,7 +138,7 @@ def nltk_sentence_split(*page_loader):
             for text in page:
                 filtered_information.append(tokenize.sent_tokenize(text))
         else:
-            filtered_information.append(tokenize.sent_tokenize(text))
+            filtered_information.append(tokenize.sent_tokenize(page))
 
     return filtered_information
 
