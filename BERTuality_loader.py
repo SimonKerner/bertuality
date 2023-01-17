@@ -207,6 +207,7 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
     
     guardian_df.drop(guardian_df.loc[guardian_df['type']=="interactive"].index, inplace=True)
     guardian_df.drop(guardian_df.loc[guardian_df['type']=="liveblog"].index, inplace=True)
+    guardian_df.drop(guardian_df.loc[guardian_df['type']=="audio"].index, inplace=True)
     guardian_df.drop_duplicates(subset=['webTitle', 'webUrl'], inplace = True)
     
     #guardian_df['webPublicationDate'] = guardian_df['webPublicationDate'].apply(lambda x: pd.to_datetime(x))
