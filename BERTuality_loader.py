@@ -135,6 +135,7 @@ def get_results_for_query(from_date, to_date, order_by, query, api_key):
             json_responses.append(response)
     return json_responses
 
+
 def get_results_for_path_lookup(from_date, to_date, order_by, path, api_key):
     json_responses = []
     response = path_lookup_api(1, from_date, to_date, order_by, path, api_key).json()
@@ -166,15 +167,21 @@ def guardian_call(from_date, to_date, query, path, order_by, api_key):
     elif query == "" and path != "":
         json_responses = get_results_for_path_lookup(from_date, to_date, order_by, path, api_key)
     
-    guardian_df = convert_json_responses_to_df(json_responses)
+    
+    # find all articels with status = "error" and drop from list
+    # else results in error in dataFrame conversion ==> [results]
+    clean_json_responses = []
+    for i in range(len(json_responses)):
+        get_status = json_responses[i].get("response").get("status")
+        if get_status == "ok":
+            clean_json_responses.append(json_responses[i])
+
+    guardian_df = convert_json_responses_to_df(clean_json_responses)
+    
     return guardian_df
 
-"""
-    Create Soup:
-        -and delete html-tags
-"""
 
-#further prep
+#delete html tags and further guardian specific sentences
 def html_cleaner(raw_html):
     filtered = re.sub('<[^>]*>', "", raw_html)
     filtered = filtered.replace("Sign up now! Sign up now! Sign up now? Sign up now!", "")
@@ -202,20 +209,20 @@ def get_articles(link_df):
 
 def guardian_loader(from_date, to_date, query="", path="", order_by="relevance"):
     api_key = 'ec1a9d25-67dc-4f71-8313-589a96c548f9'
-    
     guardian_df = guardian_call(from_date, to_date, query, path, order_by, api_key)
     
-    guardian_df.drop(guardian_df.loc[guardian_df['type']=="interactive"].index, inplace=True)
-    guardian_df.drop(guardian_df.loc[guardian_df['type']=="liveblog"].index, inplace=True)
-    guardian_df.drop(guardian_df.loc[guardian_df['type']=="audio"].index, inplace=True)
+    # filter for type == "artice" (deletes interactive, audio, liveblog, etc.)
+    guardian_df = guardian_df.loc[guardian_df['type']=="article"]
+    
+    # drop data witch contains opinion (of guardian writers), gnm-press-office, info & duplicates
+    #guardian_df.drop(guardian_df.loc[guardian_df["sectionName"]=="Opinion"].index, inplace=True)
+    guardian_df.drop(guardian_df.loc[guardian_df['sectionId']=="gnm-press-office"].index, inplace=True)
+    guardian_df.drop(guardian_df.loc[guardian_df['sectionId']=="info"].index, inplace=True)
     guardian_df.drop_duplicates(subset=['webTitle', 'webUrl'], inplace = True)
     
     #guardian_df['webPublicationDate'] = guardian_df['webPublicationDate'].apply(lambda x: pd.to_datetime(x))
     
     return get_articles(guardian_df["webUrl"]), guardian_df
-
-
-
 
 
 """
