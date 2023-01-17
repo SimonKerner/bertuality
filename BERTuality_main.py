@@ -203,10 +203,58 @@ query_pred = make_predictions(sample[0], info_query, model, tokenizer)
 
 
 
+
+
+
+
+# TODO
+"""
+
+
+            Weitete TODOs
+                
+                - Main Pipeline zusammenfügen ? ==> erste gesamt Pipeline fertig, wird aber noch geändert
+                    - Keyworderstellung hinzufügen und in main formulieren
+                    
+                - Datensatz verwerfen ? 
+                    - Gedanken: Viele Tokens sind unbekannt und lassen sich von BERT nicht predicten
+                    - Idee: Herausfinden welche Sätze aus dem Datensatz eine vollständige Tokenisierung haben und diese benutzen
+                            - Rest verwerfen
+                    
+                    
+                
+                - Keyword erstellung --> (NNP, NN) usw. entfernen -- Maxi
+                - 
+                -
+                
+                
+                
+                - Tests verschiedene Modelle erstmal unnätig
+                    - kann just for fun getestet werden und vllt. in arbeit aufgenommen werden, aber geringe Prio
+                    
+
+
+"""
+
+
+
+
+
+
+"""
+                ----------------Möglicherweise als gliederung in ungefährer From nutzbar
+"""
+
+
+# Gesamt Test verschiederer Möglichkeiten 
+
+
 """
     - schlechtes Beispiel da Token alibaba unbekannt ist
     Alibaba kann für [MASK] nie predictet werden
     Problem nur lösbar wenn BERT Tokens beigebracht werden können
+    
+    -->> Zeigt Limitation der Projektarbeit
 
 
 # Test 3 
@@ -273,7 +321,7 @@ pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)   
-filtered_query = nltk_sentence_split(guardian_query) # news_api_query, 
+filtered_query = nltk_sentence_split(news_api_query, guardian_query) 
 merged_query = merge_pages(filtered_query, tokenizer)
 
 #filter information out of full article list
@@ -291,8 +339,19 @@ simple_results = simple_pred_results(query_pred)
 # für das MASK Word abgibt und Tim Cook mit großem Score nun als CEO von Apple vorhersagt
 
 
+"""
+    PROBLEM Fehlende Tokens
+    
+    Probierte Möglichkeiten:
+        - func. learn_new_tokens
+        - ...
+        
+    Folgerung- BERT kann keine Tokens lernen
+        
+"""
 
-
-
+"""
+    Aktualitätsprüfung mit dem fill_mask model funktioniert --> solange die TOKENS in BERT bekannt sind
+"""
 
 
