@@ -14,6 +14,7 @@ from BERTuality import learn_new_token
 from BERTuality import learn_all_new_gold_token
 from BERTuality import ner_keywords
 from BERTuality import pos_keywords
+from BERTuality import simple_pred_results
 
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
@@ -197,6 +198,17 @@ query_pred = make_predictions(sample[0], info_query, model, tokenizer)
 """
 
 
+
+
+
+
+
+"""
+    - schlechtes Beispiel da Token alibaba unbekannt ist
+    Alibaba kann für [MASK] nie predictet werden
+    Problem nur lösbar wenn BERT Tokens beigebracht werden können
+
+
 # Test 3 
 
 # create sample and learn new token from sample
@@ -224,10 +236,60 @@ focus_query = keyword_focus(info_query, key_words, 5)
 
 # make prediction
 query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
+"""
 
 
 
-#actuality_dataset = load_actuality_dataset()
+"""
+    Working BERTuality funktioniert aber mit Limitationen der TOKENS
+    Gezeigt am Beispiel von Tim Cook 
+"""
+
+# 1. Alle Tokens sind unter BERT bekannt
+
+# create sample and learn new token from sample
+sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
+#learn_new_token(sample, model, tokenizer)
+
+# create key words
+key_words = ['Tim', 'Cook'] 
+
+
+# 2. Teste Vorwissen von BERT indem kein Input gegeben wird
+pretrained_knowledge = make_predictions(sample[0], [""], model, tokenizer)
+simple_pre_know = simple_pred_results(pretrained_knowledge)
+
+# ERGEBNIS: BERT kennt keinen Zusammenhabd zu Tim Cook und Apple und gibt als Word "Amazon"
+
+
+# 4. Test mit unserem Verfahren um BERT "umzustimmen" und dem Model das richtige Ergebnis beizubringen
+
+"""
+# get NER keywords
+#ner_keywords = ner_keywords(sample)
+# get POS keywords
+pos_keywords = pos_keywords(sample)
+"""
+
+# load news from guardian and news_api
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)   
+filtered_query = nltk_sentence_split(guardian_query) # news_api_query, 
+merged_query = merge_pages(filtered_query, tokenizer)
+
+#filter information out of full article list
+info_query = filter_list_final(merged_query, key_words)
+
+# focus on relevant part of sentence
+focus_query = keyword_focus(info_query, key_words, 5)
+
+# make prediction
+query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
+
+simple_results = simple_pred_results(query_pred)
+
+# ERGEBNIS NEU: Es wurde aufgezeigt, das BERT unter gelerntem Input aus dem Internet andere Predictions 
+# für das MASK Word abgibt und Tim Cook mit großem Score nun als CEO von Apple vorhersagt
+
 
 
 
