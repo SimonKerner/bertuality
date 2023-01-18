@@ -411,7 +411,7 @@ def simple_pred_results(pred_query):
     return results
 
 
-def load_actuality_dataset():
+def load_actuality_dataset(tokenizer):
     # load dataset
     actuality_dataset = pd.read_excel (r'DS_Aktualitätsprüfung.xlsx', sheet_name = 'Gesamt Daten')
     # filter datset
@@ -427,11 +427,25 @@ def load_actuality_dataset():
     del actuality_dataset['Unnamed: 9']
     del actuality_dataset['Unnamed: 10']
     
-    # delete rows that are not suitable for an actuality check
-    rows_to_delete = [649, 673, 674, 675, 676, 677, 750, 751, 752]
+    # rows that are not suitable for an actuality check
+    unsuitable_rows = [649, 673, 674, 675, 676, 677, 750, 751, 752]
+    
+    # find rows with unknown Gold Token (= Gold token consists of multiple WordPieces)
+    unknown_gold_token_rows = []
+    for index, row in actuality_dataset.iterrows():
+        gold_token = row['Gold']
+        encoding = tokenizer.encode(str(gold_token))
+        if (len(encoding) != 3):    # if encoding consists of more than CLS + Token + SEP
+            unknown_gold_token_rows.append(int(row['Nummer']))
+    
+    # delete the rows with unknown gold tokens and the unsuitable rows
+    rows_to_delete = unsuitable_rows + unknown_gold_token_rows
     for i in rows_to_delete:
         actuality_dataset = actuality_dataset[actuality_dataset.Nummer != i]
-    
+        
+    # delete rows that the tokenizer does not know the vaule of
+    #for i in actuality_dataset:
+        
     return actuality_dataset
 
 
@@ -455,6 +469,14 @@ def learn_new_token(sample, model, tokenizer):
     # add new token to tokenizer
     num_added_toks = tokenizer.add_tokens(new_token)
     model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
+
+
+
+
+
+
+
+
 
 
 

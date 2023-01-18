@@ -300,7 +300,7 @@ sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
 #learn_new_token(sample, model, tokenizer)
 
 # create key words
-key_words = ['Tim', 'Cook'] 
+key_words = ['Tim', 'Cook']
 
 
 # 2. Teste Vorwissen von BERT indem kein Input gegeben wird
