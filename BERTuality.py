@@ -427,6 +427,11 @@ def load_actuality_dataset():
     del actuality_dataset['Unnamed: 9']
     del actuality_dataset['Unnamed: 10']
     
+    # delete rows that are not suitable for an actuality check
+    rows_to_delete = [649, 673, 674, 675, 676, 677, 750, 751, 752]
+    for i in rows_to_delete:
+        actuality_dataset = actuality_dataset[actuality_dataset.Nummer != i]
+    
     return actuality_dataset
 
 

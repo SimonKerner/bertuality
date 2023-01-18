@@ -256,7 +256,7 @@ query_pred = make_predictions(sample[0], info_query, model, tokenizer)
     
     -->> Zeigt Limitation der Projektarbeit
 
-"""
+
 # Test 3 
 
 # create sample and learn new token from sample
@@ -285,14 +285,14 @@ focus_query = keyword_focus(info_query, key_words, 5)
 # make prediction
 query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
 
-
+"""
 
 
 """
     Working BERTuality funktioniert aber mit Limitationen der TOKENS
     Gezeigt am Beispiel von Tim Cook 
 """
-"""
+
 # 1. Alle Tokens sind unter BERT bekannt
 
 # create sample and learn new token from sample
@@ -339,7 +339,7 @@ simple_results = simple_pred_results(query_pred)
 
 # ERGEBNIS NEU: Es wurde aufgezeigt, das BERT unter gelerntem Input aus dem Internet andere Predictions 
 # für das MASK Word abgibt und Tim Cook mit großem Score nun als CEO von Apple vorhersagt
-"""
+
 
 """
     PROBLEM Fehlende Tokens
