@@ -450,10 +450,6 @@ def learn_new_token(sample, model, tokenizer):
     # add new token to tokenizer
     num_added_toks = tokenizer.add_tokens(new_token)
     model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
-    
-
-
-
 
 
 

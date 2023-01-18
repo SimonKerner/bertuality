@@ -256,7 +256,7 @@ query_pred = make_predictions(sample[0], info_query, model, tokenizer)
     
     -->> Zeigt Limitation der Projektarbeit
 
-
+"""
 # Test 3 
 
 # create sample and learn new token from sample
@@ -272,7 +272,7 @@ key_words = ['zhang', 'alibaba']
 pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-01', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
 filtered_query = nltk_sentence_split(news_api_query, guardian_query) 
 merged_query = merge_pages(filtered_query, tokenizer)
 
@@ -284,7 +284,7 @@ focus_query = keyword_focus(info_query, key_words, 5)
 
 # make prediction
 query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
-"""
+
 
 
 
@@ -292,7 +292,7 @@ query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
     Working BERTuality funktioniert aber mit Limitationen der TOKENS
     Gezeigt am Beispiel von Tim Cook 
 """
-
+"""
 # 1. Alle Tokens sind unter BERT bekannt
 
 # create sample and learn new token from sample
@@ -316,7 +316,7 @@ simple_pre_know = simple_pred_results(pretrained_knowledge)
 # get NER keywords
 #ner_keywords = ner_keywords(sample)
 # get POS keywords
-pos_keywords = pos_keywords(sample)
+#pos_keywords = pos_keywords(sample)
 """
 
 # load news from guardian and news_api
@@ -332,12 +332,14 @@ focus_query = keyword_focus(info_query, key_words, 5)
 
 # make prediction
 query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
+#query_pred_info = make_predictions(sample[0], info_query, model, tokenizer)
 
 simple_results = simple_pred_results(query_pred)
+#simple_results_info = simple_pred_results(query_pred_info)
 
 # ERGEBNIS NEU: Es wurde aufgezeigt, das BERT unter gelerntem Input aus dem Internet andere Predictions 
 # für das MASK Word abgibt und Tim Cook mit großem Score nun als CEO von Apple vorhersagt
-
+"""
 
 """
     PROBLEM Fehlende Tokens
