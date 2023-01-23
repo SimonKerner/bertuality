@@ -305,7 +305,8 @@ sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
 #learn_new_token(sample, model, tokenizer)
 
 # create key words
-key_words = ['Tim', 'Cook']
+#key_words = ['Tim', 'Cook']
+key_words = pos_keywords(sample)
 
 
 # 2. Teste Vorwissen von BERT indem kein Input gegeben wird
@@ -317,12 +318,6 @@ simple_pre_know = simple_pred_results(pretrained_knowledge)
 
 # 4. Test mit unserem Verfahren um BERT "umzustimmen" und dem Model das richtige Ergebnis beizubringen
 
-"""
-# get NER keywords
-#ner_keywords = ner_keywords(sample)
-# get POS keywords
-#pos_keywords = pos_keywords(sample)
-"""
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)

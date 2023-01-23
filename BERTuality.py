@@ -326,17 +326,50 @@ def ner_keywords(sample, ner_model="bert-base-NER"):
     return [i.get("word") for i in ner_results[0]]
 
 
-# create keywords by POS tagging (= Part of speech)
+# create keywords by POS tagging
 def pos_keywords(sample):
-    sample = sample[0].replace("[MASK]", "")
+    sent = sample[0].replace("[MASK]", "")
+    
     # create token and pos-tags
-    token = nltk.word_tokenize(sample)
+    token = nltk.word_tokenize(sent)
     pos_tags = nltk.pos_tag(token) 
+    
     # filter words: only take nouns  (NN, NNP, NNS, NNPS)
     key_pos_tags = [x for x in pos_tags if x[1] == "NN" or x[1] == "NNP" or x[1] == "NNS" or x[1] == "NNPS"]
     
-    key_words = [x[0] for x in key_pos_tags]
-    return key_words
+    # remove duclicates while keeping the order (not with set)
+    key_pos_tags_unique = []
+    [key_pos_tags_unique.append(x) for x in key_pos_tags if x not in key_pos_tags_unique]
+    key_pos_tags = key_pos_tags_unique
+    
+    # remove duplicates: "Russias" and "russia"!
+    
+    # filter word "Inc", because not important for meaning of the sentence!
+    key_pos_tags = [x for x in key_pos_tags if x[0] != "Inc"]
+    
+    # if key_pos_tags_filtered contains more than 4 keywords, remove some!
+    if len(key_pos_tags) > 4:
+        
+        # remove the keywords 'United' and 'States', because they are not important
+        key_pos_tags = [x for x in key_pos_tags if x[0] != 'United' and x[0] != 'States']
+           
+        # if still longer than 4, remove all excess NN and NNS     
+        if len(key_pos_tags) > 4:
+            key_pos_tags_shortened = key_pos_tags[0:4]
+            key_pos_tags_excess = key_pos_tags[4:]
+            
+            # after keyword 4, only allow keywords with POS Tags NNP or NNPS; these are the names and names are very inportant!
+            key_pos_tags_excess_shortened = [x for x in key_pos_tags_excess if x[1] == 'NNP' or x[1] == 'NNPS']
+            key_pos_tags_shortened += key_pos_tags_excess_shortened
+            
+            return [x[0] for x in key_pos_tags_shortened]
+        
+        else:
+            return [x[0] for x in key_pos_tags]
+        
+    #key_words = [x[0] for x in key_pos_tags]           
+    else:
+        return [x[0] for x in key_pos_tags]
 
 """
     BERT :
