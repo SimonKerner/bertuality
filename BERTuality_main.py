@@ -4,6 +4,8 @@ from BERTuality_loader import NewsAPI_loader
 from BERTuality_loader import guardian_loader
 from BERTuality_loader import news_loader
 from BERTuality import nltk_sentence_split
+from BERTuality import split_into_sentences
+from BERTuality import remove_too_long_sentences
 from BERTuality import merge_pages
 from BERTuality import make_predictions
 from BERTuality import filter_list_final
@@ -255,8 +257,8 @@ query_pred = make_predictions(sample[0], info_query, model, tokenizer)
     Problem nur lösbar wenn BERT Tokens beigebracht werden können
     
     -->> Zeigt Limitation der Projektarbeit
-
-
+"""
+"""
 # Test 3 
 
 # create sample and learn new token from sample
@@ -272,7 +274,7 @@ key_words = ['zhang', 'alibaba']
 pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-01', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-09-01', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
 filtered_query = nltk_sentence_split(news_api_query, guardian_query) 
 merged_query = merge_pages(filtered_query, tokenizer)
 
@@ -284,8 +286,8 @@ focus_query = keyword_focus(info_query, key_words, 5)
 
 # make prediction
 query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
-
 """
+
 
 
 """
@@ -294,6 +296,9 @@ query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
 """
 
 # 1. Alle Tokens sind unter BERT bekannt
+
+# load dataset with known gold token
+actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
 # create sample and learn new token from sample
 sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
@@ -320,12 +325,15 @@ simple_pre_know = simple_pred_results(pretrained_knowledge)
 """
 
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)   
-filtered_query = nltk_sentence_split(news_api_query, guardian_query) 
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)
+filtered_query = nltk_sentence_split(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
 
+# remove_too_long_sentences has to be called here to remove ALL sentences that are way too long
+merged_query_shortened = remove_too_long_sentences(merged_query, tokenizer)
+
 #filter information out of full article list
-info_query = filter_list_final(merged_query, key_words)
+info_query = filter_list_final(merged_query_shortened, key_words)
 
 # focus on relevant part of sentence
 focus_query = keyword_focus(info_query, key_words, 5)

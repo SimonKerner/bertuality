@@ -11,7 +11,7 @@ from nltk import tokenize
         - Split Sentences 
         - Filter Sentences with custom criteria
 """
-"""
+
 # https://stackoverflow.com/a/31505798 - and edited
 def split_into_sentences(text):
     # prefixes for split function
@@ -51,7 +51,7 @@ def split_into_sentences(text):
     sentences = [s.strip() for s in sentences]
     
     return sentences
-"""
+
 
 # Maxi        
 def filterForOneWord(sent_list, term):  
@@ -150,7 +150,7 @@ def merge_pages(filtered_pages, tokenizer):
         for text in page:
             merged.append(text)
    
-    merged = remove_too_long_sentences(merged, tokenizer)    
+    #remove_too_long_sentences(merged, tokenizer)
     
     return merged
 
@@ -411,7 +411,7 @@ def simple_pred_results(pred_query):
     return results
 
 
-def load_actuality_dataset(tokenizer):
+def load_actuality_dataset(tokenizer, delete_unknown_token = False):
     # load dataset
     actuality_dataset = pd.read_excel (r'DS_Aktualitätsprüfung.xlsx', sheet_name = 'Gesamt Daten')
     # filter datset
@@ -432,11 +432,12 @@ def load_actuality_dataset(tokenizer):
     
     # find rows with unknown Gold Token (= Gold token consists of multiple WordPieces)
     unknown_gold_token_rows = []
-    for index, row in actuality_dataset.iterrows():
-        gold_token = row['Gold']
-        encoding = tokenizer.encode(str(gold_token))
-        if (len(encoding) != 3):    # if encoding consists of more than CLS + Token + SEP
-            unknown_gold_token_rows.append(int(row['Nummer']))
+    if delete_unknown_token:
+        for index, row in actuality_dataset.iterrows():
+            gold_token = row['Gold']
+            encoding = tokenizer.encode(str(gold_token))
+            if (len(encoding) != 3):    # if encoding consists of more than CLS + Token + SEP
+                unknown_gold_token_rows.append(int(row['Nummer']))
     
     # delete the rows with unknown gold tokens and the unsuitable rows
     rows_to_delete = unsuitable_rows + unknown_gold_token_rows
