@@ -327,6 +327,17 @@ def ner_keywords(sample, ner_model="bert-base-NER"):
     
     return [i.get("word") for i in ner_results[0]]
 
+# function removes duplicate tuples; ("Russias", "NNP") is removed, when there is also ("russia", "NNP")
+def remove_longer_tuples(tuples_list):
+    to_remove = []
+    for i, t1 in enumerate(tuples_list):
+        for j, t2 in enumerate(tuples_list):
+            if i != j and str(t1[0]).lower() in str(t2[0]).lower():
+                to_remove.append(t2)
+                
+    for t in to_remove:
+        tuples_list.remove(t)
+    return tuples_list
 
 # create keywords by POS tagging
 def pos_keywords(sample):
@@ -345,6 +356,7 @@ def pos_keywords(sample):
     key_pos_tags = key_pos_tags_unique
     
     # remove duplicates: "Russias" and "russia"!
+    remove_longer_tuples(key_pos_tags)
     
     # filter word "Inc", because not important for meaning of the sentence!
     key_pos_tags = [x for x in key_pos_tags if x[0] != "Inc"]

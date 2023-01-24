@@ -324,10 +324,7 @@ simple_pre_know = simple_pred_results(pretrained_knowledge)
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)
 filtered_query = nltk_sentence_split(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
-"""
-# remove_too_long_sentences has to be called here to remove ALL sentences that are way too long
-remove_too_long_sentences(merged_query, tokenizer)
-"""
+
 
 #filter information out of full article list
 info_query = filter_list_final(merged_query, key_words)
