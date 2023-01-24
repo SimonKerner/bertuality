@@ -4,7 +4,6 @@ from BERTuality_loader import NewsAPI_loader
 from BERTuality_loader import guardian_loader
 from BERTuality_loader import news_loader
 from BERTuality import nltk_sentence_split
-from BERTuality import split_into_sentences
 from BERTuality import remove_too_long_sentences
 from BERTuality import merge_pages
 from BERTuality import make_predictions
@@ -18,6 +17,7 @@ from BERTuality import ner_keywords
 from BERTuality import pos_keywords
 from BERTuality import simple_pred_results
 from BERTuality import filter_for_keyword_subsets
+from BERTuality import word_piece_prediction
 
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
@@ -296,6 +296,7 @@ query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
     Gezeigt am Beispiel von Tim Cook 
 """
 
+"""
 # 1. Alle Tokens sind unter BERT bekannt
 
 # load dataset with known gold token
@@ -338,7 +339,7 @@ simple_results = simple_pred_results(query_pred)
 
 # ERGEBNIS NEU: Es wurde aufgezeigt, das BERT unter gelerntem Input aus dem Internet andere Predictions 
 # für das MASK Word abgibt und Tim Cook mit großem Score nun als CEO von Apple vorhersagt
-
+"""
 
 """
     PROBLEM Fehlende Tokens
@@ -354,5 +355,57 @@ simple_results = simple_pred_results(query_pred)
 """
     Aktualitätsprüfung mit dem fill_mask model funktioniert --> solange die TOKENS in BERT bekannt sind
 """
+
+"""
+                MAIN TEST 2 - WP PREDICTION   
+"""
+
+# tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-large-uncased-whole-word-masking')
+
+# model: BERT pre-trained
+model = BertForMaskedLM.from_pretrained('bert-large-uncased-whole-word-masking')
+
+# 1. Alle Tokens sind unter BERT bekannt
+
+# load dataset with known gold token
+#actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
+
+# create sample and learn new token from sample
+#sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
+#sample2 = ["Andy Jassy is the current CEO of [MASK].", "Amazon"]
+sample3 = ["Daniel Zhang is the CEO of [MASK].", "Alibaba"]
+
+# create key words
+key_words = pos_keywords(sample3)
+
+
+# 2. Teste Vorwissen von BERT indem kein Input gegeben wird
+#pretrained_knowledge = make_predictions(sample2[0], [""], model, tokenizer)
+#simple_pre_know = simple_pred_results(pretrained_knowledge)
+# ERGEBNIS: BERT kennt keinen Zusammenhang zu Tim Cook und Apple und gibt als Word "Amazon"
+
+
+# 4. Test mit unserem Verfahren um BERT "umzustimmen" und dem Model das richtige Ergebnis beizubringen
+
+# load news from guardian and news_api
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-10-05', key_words)
+filtered_query = nltk_sentence_split(news_api_query, guardian_query)
+merged_query = merge_pages(filtered_query)
+
+#filter information out of full article list
+#info_query = filter_list_final(merged_query, key_words, tokenizer)
+info_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, 2)
+
+# focus on relevant part of sentence
+focus_query = keyword_focus(info_query, key_words, 5)
+
+# make prediction
+query_pred = make_predictions(sample3[0], focus_query, model, tokenizer)                # Original
+wp_query_pred = word_piece_prediction(sample3[0], focus_query, model, tokenizer)        # WP_Pred
+
+
+simple_results = simple_pred_results(query_pred)                                        # Original         
+wp_simple_results = simple_pred_results(wp_query_pred)                                  # WP_Pred
 
 
