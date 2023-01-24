@@ -206,6 +206,7 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
     
     # drop data witch contains opinion (of guardian writers), gnm-press-office, info & duplicates
     #guardian_df.drop(guardian_df.loc[guardian_df["sectionName"]=="Opinion"].index, inplace=True)
+    guardian_df.drop(guardian_df.loc[guardian_df['sectionId']=="crosswords"].index, inplace=True)           
     guardian_df.drop(guardian_df.loc[guardian_df['sectionId']=="gnm-press-office"].index, inplace=True)
     guardian_df.drop(guardian_df.loc[guardian_df['sectionId']=="info"].index, inplace=True)
     guardian_df.drop_duplicates(subset=['webTitle', 'webUrl'], inplace = True)
