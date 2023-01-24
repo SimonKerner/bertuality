@@ -17,6 +17,7 @@ from BERTuality import learn_all_new_gold_token
 from BERTuality import ner_keywords
 from BERTuality import pos_keywords
 from BERTuality import simple_pred_results
+from BERTuality import filter_for_keyword_subsets
 
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
@@ -302,41 +303,34 @@ actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False
 
 # create sample and learn new token from sample
 sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
-sample_2 = ["Russias president Putin has been president of russia for [MASK] years and was president for 8 years in his first term of office.", "10"]
-#learn_new_token(sample, model, tokenizer)
+sample2 = ["Andy Jassy is the current CEO of [MASK]", "Amazon"]
 
 # create key words
-#key_words = ['Tim', 'Cook']
-key_words = pos_keywords(sample_2)
+key_words = pos_keywords(sample2)
 
 
 # 2. Teste Vorwissen von BERT indem kein Input gegeben wird
-pretrained_knowledge = make_predictions(sample_2[0], [""], model, tokenizer)
+pretrained_knowledge = make_predictions(sample2[0], [""], model, tokenizer)
 simple_pre_know = simple_pred_results(pretrained_knowledge)
-
 # ERGEBNIS: BERT kennt keinen Zusammenhang zu Tim Cook und Apple und gibt als Word "Amazon"
 
 
 # 4. Test mit unserem Verfahren um BERT "umzustimmen" und dem Model das richtige Ergebnis beizubringen
 
-
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-01', key_words)
+news_api_query, guardian_query, guardian_query_df = news_loader('2023-01-05', key_words)
 filtered_query = nltk_sentence_split(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query)
 
-
 #filter information out of full article list
-info_query = filter_list_final(merged_query, key_words, tokenizer)
-
-# sentences that are too long need to be removed
-#info_query = remove_too_long_sentences(info_query, tokenizer)
+#info_query = filter_list_final(merged_query, key_words, tokenizer)
+info_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, 2)
 
 # focus on relevant part of sentence
 focus_query = keyword_focus(info_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample_2[0], focus_query, model, tokenizer)
+query_pred = make_predictions(sample2[0], focus_query, model, tokenizer)
 #query_pred_info = make_predictions(sample[0], info_query, model, tokenizer)
 
 simple_results = simple_pred_results(query_pred)

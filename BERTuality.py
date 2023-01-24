@@ -5,6 +5,7 @@ import random
 import re
 import nltk
 from nltk import tokenize
+import itertools
 
 """
     Data Preparation
@@ -81,6 +82,14 @@ def remove_duplicates(sent_list):   # durch Iterieren wird die originale Reihenf
             result.append(a)
     return result
 
+# function to create subsets from keywords, used in filter_for_keyword_subsets
+def create_subsets(mylist, subset_size):
+    if subset_size > len(mylist):
+        return mylist
+    subsets = [list(comb) for comb in itertools.combinations(mylist, subset_size)]
+    
+    return subsets
+
 
 def filter_list(sent_list, terms):
     result = sent_list
@@ -105,6 +114,14 @@ def filter_list_final(sent_list, twod_list, tokenizer):    #twod_list = 2 dimens
     result = remove_too_long_sentences(result, tokenizer)
     
     return result
+
+
+def filter_for_keyword_subsets(sent_list, keywords, tokenizer, subset_size):
+    keyword_subsets = create_subsets(keywords, subset_size)
+    
+    return filter_list_final(sent_list, keyword_subsets, tokenizer)
+    
+    
         
    
 def remove_too_long_sentences(sent_list, tokenizer):
