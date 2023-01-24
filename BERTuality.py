@@ -485,8 +485,11 @@ def word_piece_temp_df_pred(mask_sentence, input_sentence, tokens, start_pos, wp
     
     # 3. get word and score of word --append to list
     concat_word = ""
-    for p in range(len(piece_pred)):
-        concat_word = concat_word + piece_pred["token1"][p]
+    if piece_pred["token1"].nunique() == 1:
+        concat_word = piece_pred["token1"][0]
+    else:
+        for p in range(0, len(piece_pred)):
+            concat_word = concat_word + piece_pred["token1"][p]
     
     # 4. get list - concat word and get average score
     temp_df = pd.DataFrame([{'masked': mask_sentence, 
@@ -556,6 +559,11 @@ def word_piece_prediction(sample, input_sentences, model, tokenizer):
                 wp_append_start = False
                 
             else:pass
+        
+        # if wp_counter == 0 --> no wp_word was found (all tokens known) --> use normal make_pred pipe for prediction
+        if wp_counter == 0:
+            temp_df = make_predictions(sample, [sentence], model, tokenizer)
+            wp_results = pd.concat([wp_results, temp_df], ignore_index=True)
 
     #return list of sentences with  --> return predicted sentences from focus
     return wp_results
