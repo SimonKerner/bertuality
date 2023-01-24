@@ -54,44 +54,33 @@ def NewsAPI_loader(from_param, topic):
     all_articles = overview['articles']
     
     # get all headlines in list
-    content = [] 
+    content = []
     for article in all_articles:
+        
         description = article['description']
-        title = article['title']
-        content.append(description)
-        content.append(title)
+        #title = article['title']
         
-    # remove distracting chars (clean sentences)
-    content_cleaned = ""    
-    for element in content:
-        if (type(element) == str):
-            element = re.sub("[\<].*?[\>]", "", element)    #remove all HTML Tags!
-            element = element.replace('- Reuters','')
-            element = element.replace ('- CTV News', '')
-            element = element.replace ('- TASS', '')
-            element = element.replace ('- EMSC', '')
-            element = element.replace ('- watchdog', '')
-            element = element.replace ('- CBC', '')
-            element = element.replace ('- live', '')
-            element = element.replace ('– Football Daily', '')
-            element = element.replace ('Sign up now!', '')
-            element = element.replace ('Sign up now?', '')
-            element = element.replace('Continue reading...', '')
-            element = element.replace('.com', '')
-            element = element.replace('...', '')
-            if element.endswith("…"):           # sometimes a word ends ends in the middle with ... ("He did this and th...") --> remove incomplete word at the end
-                words = element.split()         # but most of the time the word is still complete, so the function is not used now, but might be used later
-                words.pop(len(words) -1)
-                element = ""
-                for word in words:
-                    element += (word + " ")         
-            element = element.replace('…', '') 
-            element = element.strip()
-            if (not element.endswith(".") and not element.endswith("!") and not element.endswith("?")):     #add "." at end of every sentence
-                element += "."
-            content_cleaned += element
-        
-    return content_cleaned
+        if len(description) > 0:    
+            filtered = re.sub('<[^>]*>', "", description)           # delete html tags
+            filtered = re.sub('<!--.*', "", filtered)               # also html tag
+            filtered = re.sub(r'\([^)]*\)', "", filtered)           # delete (asdf) in parenthesis 
+            filtered = re.sub(r'[A-Z]*\b\/[A-Z]+', "", filtered)    # delete GUANGZHOU/TOKYO/BANGKOK
+            filtered = re.sub("\r?\n|\r", "", filtered)             # delete line break
+            filtered = re.sub(r'(\s\w*…)', ".", filtered)           # delete a…
+            filtered = re.sub(r'(\s\w*\.{3})', ".", filtered)       # delete a...
+            filtered = filtered.replace("®", "")
+            filtered = filtered.replace("  ", " ")
+            filtered = filtered.replace(" -- ", "")
+            filtered = filtered.replace(" [...]", "")
+            filtered = filtered.replace("•", "")
+            
+            if filtered[-1] != ".":
+                filtered = filtered + "."
+            
+            content.append(filtered)
+            #content.append(title)
+  
+    return content
 
 
 """
