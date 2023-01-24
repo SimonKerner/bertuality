@@ -303,7 +303,7 @@ actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False
 
 # create sample and learn new token from sample
 sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
-sample2 = ["Andy Jassy is the current CEO of [MASK]", "Amazon"]
+sample2 = ["Andy Jassy is the current CEO of [MASK].", "Amazon"]
 
 # create key words
 key_words = pos_keywords(sample2)

@@ -13,6 +13,7 @@ import itertools
         - Filter Sentences with custom criteria
 """
 
+"""
 # https://stackoverflow.com/a/31505798 - and edited
 def split_into_sentences(text):
     # prefixes for split function
@@ -52,9 +53,9 @@ def split_into_sentences(text):
     sentences = [s.strip() for s in sentences]
     
     return sentences
+"""
+      
 
-
-# Maxi        
 def filterForOneWord(sent_list, term):  
     result = []
     for i in range(len(sent_list)):
@@ -81,6 +82,7 @@ def remove_duplicates(sent_list):   # durch Iterieren wird die originale Reihenf
         if a not in result:
             result.append(a)
     return result
+
 
 # function to create subsets from keywords, used in filter_for_keyword_subsets
 def create_subsets(mylist, subset_size):
@@ -122,8 +124,6 @@ def filter_for_keyword_subsets(sent_list, keywords, tokenizer, subset_size):
     return filter_list_final(sent_list, keyword_subsets, tokenizer)
     
     
-        
-   
 def remove_too_long_sentences(sent_list, tokenizer):
     short_sent_list = []
     for i in range(len(sent_list)):
@@ -133,21 +133,6 @@ def remove_too_long_sentences(sent_list, tokenizer):
             
     return short_sent_list
     
-"""
-# overall text_filter for page loader  
-def sentence_converter(*page_loader):
-    # list holds many pages
-    
-    filtered_information = []
-    for page in page_loader:
-        if type(page) == list:
-            for text in page:
-                filtered_information.append(split_into_sentences(text))
-        else:
-            filtered_information.append(split_into_sentences(page))
-
-    return filtered_information
-"""
 
 # overall text_filter for page loader  
 def nltk_sentence_split(*page_loader):
@@ -169,7 +154,8 @@ def merge_pages(filtered_pages):
     merged = []
     for page in filtered_pages:
         for text in page:
-            merged.append(text)
+            if len(text) > 15:                                                      
+                merged.append(text)
    
     # function needs to be called twice, because the 1st time not all very long sentences are removed (strange)
     #remove_too_long_sentences(merged, tokenizer)
@@ -336,6 +322,7 @@ def keyword_focus(input_sentences, key_words, padding=0):
         - prefered POS -> faster and more accurate
 """
 
+
 def ner_keywords(sample, ner_model="bert-base-NER"):
     tokenizer = AutoTokenizer.from_pretrained("dslim/" + ner_model)
     model = AutoModelForTokenClassification.from_pretrained("dslim/" + ner_model)
@@ -346,6 +333,7 @@ def ner_keywords(sample, ner_model="bert-base-NER"):
     ner_results = nlp(sample)
     
     return [i.get("word") for i in ner_results[0]]
+
 
 # function removes duplicate tuples; ("Russias", "NNP") is removed, when there is also ("russia", "NNP")
 def remove_longer_tuples(tuples_list):
@@ -358,6 +346,7 @@ def remove_longer_tuples(tuples_list):
     for t in to_remove:
         tuples_list.remove(t)
     return tuples_list
+
 
 # create keywords by POS tagging
 def pos_keywords(sample):
@@ -405,16 +394,10 @@ def pos_keywords(sample):
     else:
         return [x[0] for x in key_pos_tags]
 
+
 """
     BERT :
         
-"""
-"""
-# tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
-
-# model: BERT pre-trained
-model = BertForMaskedLM.from_pretrained('bert-large-uncased')
 """
 
 

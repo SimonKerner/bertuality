@@ -87,12 +87,12 @@ def NewsAPI_loader(from_param, topic):
     Guardian API Call:
 """
 
-#Auf HTTPX umstellen. statt requests
-#Selectolax anstatt von BS. 
-
 
 def query_api(page, from_date, to_date, order_by, query, api_key):
-
+    
+    # Convert query name to correct from                                                  
+    query = query.replace(" ", "%20")
+    
     response = requests.get("https://content.guardianapis.com/search?from-date="
                             + from_date + "&to-date=" + to_date + "&order-by=" + order_by 
                             +"&page=" + str(page) + "&page-size=200" + "&q=" + query +  
@@ -106,7 +106,6 @@ def path_lookup_api(page, from_date, to_date, order_by, path, api_key):
                             + from_date + "&to-date=" + to_date + "&page=" + str(page) 
                             + "&page-size=200&order-by=" + order_by + "&api-key=" + api_key)
     return response
-
 
 
 def get_results_for_query(from_date, to_date, order_by, query, api_key):
@@ -171,16 +170,6 @@ def guardian_call(from_date, to_date, query, path, order_by, api_key):
     return guardian_df
 
 
-#delete html tags and further guardian specific sentences
-def html_cleaner(raw_html):
-    filtered = re.sub('<[^>]*>', "", raw_html)
-    filtered = filtered.replace("Sign up now! Sign up now! Sign up now? Sign up now!", "")
-    filtered = filtered.replace("""Sign up to Business TodayGet set for the working 
-                                day – we'll point you to the all the business 
-                                news and analysis you need every morning""", "")
-    return filtered
-
-
 def get_articles(link_df):
     filtered_article_list = []
     for i in link_df:
@@ -188,11 +177,16 @@ def get_articles(link_df):
         html_doc = BeautifulSoup(response.content, 'html.parser')
         p_content = html_doc.body.main.div.find_all("p")
         
-        raw_text = " ".join(map(str, p_content))
-        filtered_text = html_cleaner(raw_text) 
+        raw_html = " ".join(map(str, p_content))
         
-        if len(filtered_text) > 0:
-            filtered_article_list.append(filtered_text)
+        filtered = re.sub('<[^>]*>', "", raw_html)
+        filtered = filtered.replace("Sign up now! Sign up now! Sign up now? Sign up now!", "")     
+        filtered = filtered.replace("""Sign up to Business TodayGet set for the working 
+                                    day – we'll point you to the all the business 
+                                    news and analysis you need every morning""", "")
+        
+        if len(filtered) > 0:
+            filtered_article_list.append(filtered)
             
     return filtered_article_list
 
@@ -202,6 +196,9 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
     guardian_df = guardian_call(from_date, to_date, query, path, order_by, api_key)
     
     # filter for type == "artice" (deletes interactive, audio, liveblog, etc.)
+    if len(guardian_df) == 0:                                                              
+        return [], guardian_df
+    
     guardian_df = guardian_df.loc[guardian_df['type']=="article"]
     
     # drop data witch contains opinion (of guardian writers), gnm-press-office, info & duplicates
@@ -220,13 +217,10 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
     overall News loader
 """
 
+
 def news_loader(from_date, topic_list):
     
-    # create string from topic
-    topic = ""
-    for word in topic_list:
-        topic += word + " "
-    topic = topic.lower().strip()
+    topic = " AND ".join(topic_list)                                                    
     
     # get current date
     to_date = date.today().strftime("%Y-%m-%d")
@@ -238,8 +232,6 @@ def news_loader(from_date, topic_list):
     
     return news_api_query, guardian_query, guardian_query_df
 
-
-#news_api_query, guardian_query = news_loader('2022-12-01', 'Biden')
 
 
 
