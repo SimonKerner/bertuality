@@ -469,6 +469,115 @@ def make_predictions(masked_sentence, sent_list, model, tokenizer):
     return pred
 
 
+def create_expand_sentences(sentence, tokens, start_pos, piece_pos):
+   
+    # delete ending dot
+    if sentence[-1] == ".":
+       sentence = sentence[0:-1]
+    
+    sentence = sentence.split()
+    
+    token = tokens[piece_pos]
+    token = token.replace("##", "")
+    sentence[start_pos] = token.capitalize()
+    sentence = " ".join(sentence)
+    sentence = sentence + "."
+    
+    return sentence
+
+
+def word_piece_temp_df_pred(mask_sentence, input_sentence, tokens, start_pos, wp_position, model, tokenizer):
+    
+    wp_position.sort()
+    
+    word_piece_input = []
+    ## create sentences - for a whole word piece word
+    for pos in wp_position:
+        
+        # 1. create new sentence
+        word_piece_input.append(create_expand_sentences(input_sentence, tokens, start_pos, pos))
+        
+    # 2. make prediciton to new sentences
+    piece_pred = make_predictions(mask_sentence, word_piece_input, model, tokenizer)
+    
+    # 3. get word and score of word --append to list
+    concat_word = ""
+    for p in range(len(piece_pred)):
+        concat_word = concat_word + piece_pred["token1"][p]
+    
+    # 4. get list - concat word and get average score
+    temp_df = pd.DataFrame([{'masked': mask_sentence, 
+                             'input': piece_pred["input"],#" & ".join(word_piece_input),
+                             "input + masked": piece_pred["input + masked"],#" & ".join(piece_pred["input + masked"]),
+                             'token1': concat_word.capitalize(), 
+                             'score1': piece_pred["score1"].mean()}])
+    return temp_df
+
+
+def word_piece_prediction(sample, input_sentences, model, tokenizer):
+    
+    # find index of ali ##ba ##ba
+    # rule word bevore ## is always par of whole word
+    # find whole word pieces
+    
+    #output
+    wp_results = pd.DataFrame(columns=["masked", "input", "input + masked", "token1", "score1"])
+    
+    #get input sentences
+    for sentence in input_sentences:
+        #tokenize sentence
+        tokens = tokenizer.tokenize(sentence)
+        token_length = len(tokens)
+        
+        # first path --> sentence has no special word pieces -- no ## found -nomal-pred
+        
+        # second path --> sentence has word pieces -- can be found with ## - wp-pred
+        wp_append_start = False
+        wp_position = []
+        wp_counter = 0
+        
+       
+        for token_pos in range(token_length):
+            # find count of ##pieces
+            word = tokens[token_pos]
+           
+            if "##" in word:
+                wp_position.append(token_pos)    # append first occurence
+                wp_counter += 1     # used to correct positioning
+                
+                if wp_append_start == False:
+                    wp_position.append(token_pos - 1)    # append start of word piece word (==equal to one word) 
+                    wp_append_start = True
+                    
+                #  "##" is last word --> make prediction now, because range runs out
+                elif wp_append_start == True and token_pos == token_length - 1:
+                    start_pos = token_pos - wp_counter # dynamic start position in split func() & -1 because counter is one forward
+                    
+                    # get results of prediction in DataFrame
+                    temp_df = word_piece_temp_df_pred(sample, sentence, tokens, start_pos, wp_position, model, tokenizer)
+                    
+                    # concat results of 
+                    wp_results = pd.concat([wp_results, temp_df])
+                    
+            elif wp_append_start == True and "##" not in word: # word piece word is over --> make pred for it
+                start_pos = token_pos - wp_counter - 1 # dynamic start position in split func() & -1 because counter is one forward
+                
+                # get results of prediction in DataFrame
+                temp_df = word_piece_temp_df_pred(sample, sentence, tokens, start_pos, wp_position, model, tokenizer)
+                
+                # concat results of 
+                wp_results = pd.concat([wp_results, temp_df], ignore_index=True)
+                
+                # 5. reset counter and lists for next word piece
+                wp_position.clear()
+                wp_append_start = False
+                
+            else:pass
+
+    #return list of sentences with  --> return predicted sentences from focus
+    return wp_results
+
+
 def simple_pred_results(pred_query):
     
     if pred_query is None:
