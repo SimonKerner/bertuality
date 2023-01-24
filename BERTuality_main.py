@@ -306,11 +306,11 @@ sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
 sample2 = ["Andy Jassy is the current CEO of [MASK]", "Amazon"]
 
 # create key words
-key_words = pos_keywords(sample2)
+key_words = pos_keywords(sample)
 
 
 # 2. Teste Vorwissen von BERT indem kein Input gegeben wird
-pretrained_knowledge = make_predictions(sample2[0], [""], model, tokenizer)
+pretrained_knowledge = make_predictions(sample[0], [""], model, tokenizer)
 simple_pre_know = simple_pred_results(pretrained_knowledge)
 # ERGEBNIS: BERT kennt keinen Zusammenhang zu Tim Cook und Apple und gibt als Word "Amazon"
 
@@ -330,7 +330,7 @@ info_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, 2)
 focus_query = keyword_focus(info_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample2[0], focus_query, model, tokenizer)
+query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
 #query_pred_info = make_predictions(sample[0], info_query, model, tokenizer)
 
 simple_results = simple_pred_results(query_pred)
