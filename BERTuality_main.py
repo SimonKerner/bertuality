@@ -302,15 +302,16 @@ actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False
 
 # create sample and learn new token from sample
 sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
+sample_2 = ["Russias president Putin has been president of russia for [MASK] years and was president for 8 years in his first term of office.", "10"]
 #learn_new_token(sample, model, tokenizer)
 
 # create key words
 #key_words = ['Tim', 'Cook']
-key_words = pos_keywords(sample)
+key_words = pos_keywords(sample_2)
 
 
 # 2. Teste Vorwissen von BERT indem kein Input gegeben wird
-pretrained_knowledge = make_predictions(sample[0], [""], model, tokenizer)
+pretrained_knowledge = make_predictions(sample_2[0], [""], model, tokenizer)
 simple_pre_know = simple_pred_results(pretrained_knowledge)
 
 # ERGEBNIS: BERT kennt keinen Zusammenhabd zu Tim Cook und Apple und gibt als Word "Amazon"
@@ -323,18 +324,19 @@ simple_pre_know = simple_pred_results(pretrained_knowledge)
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)
 filtered_query = nltk_sentence_split(news_api_query, guardian_query)
 merged_query = merge_pages(filtered_query, tokenizer)
-
+"""
 # remove_too_long_sentences has to be called here to remove ALL sentences that are way too long
-merged_query_shortened = remove_too_long_sentences(merged_query, tokenizer)
+remove_too_long_sentences(merged_query, tokenizer)
+"""
 
 #filter information out of full article list
-info_query = filter_list_final(merged_query_shortened, key_words)
+info_query = filter_list_final(merged_query, key_words)
 
 # focus on relevant part of sentence
 focus_query = keyword_focus(info_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
+query_pred = make_predictions(sample_2[0], focus_query, model, tokenizer)
 #query_pred_info = make_predictions(sample[0], info_query, model, tokenizer)
 
 simple_results = simple_pred_results(query_pred)

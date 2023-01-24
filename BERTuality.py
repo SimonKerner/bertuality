@@ -150,7 +150,9 @@ def merge_pages(filtered_pages, tokenizer):
         for text in page:
             merged.append(text)
    
-    #remove_too_long_sentences(merged, tokenizer)
+    # function needs to be called twice, because the 1st time not all very long sentences are removed (strange)
+    remove_too_long_sentences(merged, tokenizer)
+    remove_too_long_sentences(merged, tokenizer)
     
     return merged
 
@@ -387,6 +389,9 @@ model = BertForMaskedLM.from_pretrained('bert-large-uncased')
 # make predictions
 def make_predictions(masked_sentence, sent_list, model, tokenizer):
     
+    if len(sent_list) == 0:
+        return
+    
     # pipeline pre-trained
     fill_mask_pipeline_pre = pipeline("fill-mask", model=model, tokenizer=tokenizer)
     
@@ -433,6 +438,10 @@ def make_predictions(masked_sentence, sent_list, model, tokenizer):
 
 
 def simple_pred_results(pred_query):
+    
+    if pred_query is None:
+        return 
+    
     results = pd.DataFrame(columns=["Token", "Frequency", "max_score", "min_score", "mean_score", "sum_up_score"])
     results["Token"] = pred_query["token1"].unique()
     results["Frequency"] = results["Token"].map(pred_query["token1"].value_counts())
