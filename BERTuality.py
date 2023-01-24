@@ -90,7 +90,7 @@ def filter_list(sent_list, terms):
     return result
 
 
-def filter_list_final(sent_list, twod_list):    #twod_list = 2 dimensional list, but can also be a one-dimensional list!
+def filter_list_final(sent_list, twod_list, tokenizer):    #twod_list = 2 dimensional list, but can also be a one-dimensional list!
     result = [] 
     
     if isinstance(twod_list[0], list):      # if the list is 2d
@@ -101,16 +101,20 @@ def filter_list_final(sent_list, twod_list):    #twod_list = 2 dimensional list,
         result += filter_list(sent_list, twod_list)
         
     result = remove_duplicates(result)
+    
+    result = remove_too_long_sentences(result, tokenizer)
+    
     return result
         
    
 def remove_too_long_sentences(sent_list, tokenizer):
-    for sent in sent_list:
-        encoding = tokenizer.encode(sent)
-        if len((tokenizer.convert_ids_to_tokens(encoding))) > 102:    #512/5 = 102; max token length: 512, each sentence is taken 5 times
-            sent_list.remove(sent)
+    short_sent_list = []
+    for i in range(len(sent_list)):
+        encoding = tokenizer.encode(sent_list[i])
+        if len(encoding) <= 102:    #512/5 = 102; max token length: 512, each sentence is taken 5 times
+            short_sent_list.append(sent_list[i])
             
-    return sent_list
+    return short_sent_list
     
 """
 # overall text_filter for page loader  
@@ -144,15 +148,14 @@ def nltk_sentence_split(*page_loader):
 
 
 # used to merge the list of pages into one list with all information
-def merge_pages(filtered_pages, tokenizer):
+def merge_pages(filtered_pages):
     merged = []
     for page in filtered_pages:
         for text in page:
             merged.append(text)
    
     # function needs to be called twice, because the 1st time not all very long sentences are removed (strange)
-    remove_too_long_sentences(merged, tokenizer)
-    remove_too_long_sentences(merged, tokenizer)
+    #remove_too_long_sentences(merged, tokenizer)
     
     return merged
 

@@ -314,20 +314,23 @@ key_words = pos_keywords(sample_2)
 pretrained_knowledge = make_predictions(sample_2[0], [""], model, tokenizer)
 simple_pre_know = simple_pred_results(pretrained_knowledge)
 
-# ERGEBNIS: BERT kennt keinen Zusammenhabd zu Tim Cook und Apple und gibt als Word "Amazon"
+# ERGEBNIS: BERT kennt keinen Zusammenhang zu Tim Cook und Apple und gibt als Word "Amazon"
 
 
 # 4. Test mit unserem Verfahren um BERT "umzustimmen" und dem Model das richtige Ergebnis beizubringen
 
 
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-25', key_words)
+news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-01', key_words)
 filtered_query = nltk_sentence_split(news_api_query, guardian_query)
-merged_query = merge_pages(filtered_query, tokenizer)
+merged_query = merge_pages(filtered_query)
 
 
 #filter information out of full article list
-info_query = filter_list_final(merged_query, key_words)
+info_query = filter_list_final(merged_query, key_words, tokenizer)
+
+# sentences that are too long need to be removed
+#info_query = remove_too_long_sentences(info_query, tokenizer)
 
 # focus on relevant part of sentence
 focus_query = keyword_focus(info_query, key_words, 5)
