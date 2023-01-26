@@ -69,7 +69,7 @@ def filter_list_final(sent_list, twod_list, tokenizer):    #twod_list = 2 dimens
     if isinstance(twod_list[0], str):                   # so that the given list can also be one-dimensional!
         result += filter_list(sent_list, twod_list)
         
-    result = remove_duplicates(result)
+    #result = remove_duplicates(result)
     
     result = remove_too_long_sentences(result, tokenizer)
     
@@ -223,7 +223,7 @@ def pos_keywords(sample):
     token = nltk.word_tokenize(sent)
     pos_tags = nltk.pos_tag(token) 
     
-    # filter words: only take nouns  (NN, NNP, NNS, NNPS)
+    # filter words: only take nouns  (NN, NNS, NNP, NNPS)
     key_pos_tags = [x for x in pos_tags if x[1] == "NN" or x[1] == "NNP" or x[1] == "NNS" or x[1] == "NNPS"]
     
     # remove duclicates while keeping the order (not with set)
@@ -235,7 +235,7 @@ def pos_keywords(sample):
     remove_longer_tuples(key_pos_tags)
     
     # filter word "Inc", because not important for meaning of the sentence!
-    key_pos_tags = [x for x in key_pos_tags if x[0] != "Inc"]
+    key_pos_tags = [x for x in key_pos_tags if x[0] != "Inc" and x[0] != "Inc."]
     
     # if key_pos_tags_filtered contains more than 4 keywords, remove some!
     if len(key_pos_tags) > 4:
