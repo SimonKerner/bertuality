@@ -1,58 +1,16 @@
 from transformers import BertTokenizer, BertForMaskedLM, pipeline
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 import pandas as pd
-import random
 import re
 import nltk
 from nltk import tokenize
 import itertools
 
+
 """
     Data Preparation
         - Split Sentences 
         - Filter Sentences with custom criteria
-"""
-
-"""
-# https://stackoverflow.com/a/31505798 - and edited
-def split_into_sentences(text):
-    # prefixes for split function
-    alphabets= "([A-Za-z])"
-    prefixes = "(Mr|St|Mrs|Ms|Dr|Prof|Capt|Cpt|Lt|Mt)[.]"
-    suffixes = "(Inc|Ltd|Jr|Sr|Co)"
-    starters = "(Mr|Mrs|Ms|Dr|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
-    acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
-    websites = "[.](com|net|org|io|gov|me|edu)"
-    digits = "([0-9])"
-    
-    text = " " + text + "  "
-    text = text.replace("\n"," ")
-    text = re.sub(prefixes,"\\1<prd>",text)
-    text = re.sub(websites,"<prd>\\1",text)
-    text = re.sub(digits + "[.]" + digits,"\\1<prd>\\2",text)
-    if "..." in text: text = text.replace("...","<prd><prd><prd>")
-    if "Ph.D" in text: text = text.replace("Ph.D.","Ph<prd>D<prd>")
-    text = re.sub("\s" + alphabets + "[.] "," \\1<prd> ",text)
-    text = re.sub(acronyms+" "+starters,"\\1<stop> \\2",text)
-    text = re.sub(alphabets + "[.]" + alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>\\3<prd>",text)
-    text = re.sub(alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>",text)
-    text = re.sub(" "+suffixes+"[.] "+starters," \\1<stop> \\2",text)
-    text = re.sub(" "+suffixes+"[.]"," \\1<prd>",text)
-    text = re.sub(" " + alphabets + "[.]"," \\1<prd>",text)
-    if "”" in text: text = text.replace(".”","”.")
-    if "\"" in text: text = text.replace(".\"","\".")
-    if "!" in text: text = text.replace("!\"","\"!")
-    if "?" in text: text = text.replace("?\"","\"?")
-    if "..." in text: text = text.replace("...","<prd><prd><prd>")
-    text = text.replace(".",".<stop>")
-    text = text.replace("?","?<stop>")
-    text = text.replace("!","!<stop>")
-    text = text.replace("<prd>",".")
-    sentences = text.split("<stop>")
-    sentences = sentences[:-1]
-    sentences = [s.strip() for s in sentences]
-    
-    return sentences
 """
       
 
@@ -163,109 +121,13 @@ def merge_pages(filtered_pages):
     return merged
 
 
-# create keywordlist with deletion criteria: delete random word, from left/right, longest, shortest
-def keyword_creator(masked_sentence, word_deletion=True, criteria="random", min_key_words=3):
-    #prep sentence
-    masked_sentence = masked_sentence.replace("[MASK]", "")
-    masked_sentence = masked_sentence.replace(".", "")
-    masked_sentence = masked_sentence.split()
-
-    key_list = [masked_sentence]
-    
-    #further sentence preperation
-    if not word_deletion:
-        return key_list
-    
-    else:
-        temp_key_list = list(key_list[0])
-        
-        for i in range(min_key_words, len(temp_key_list)): 
-    
-            # delete a word from masked_sentence chosen one of many criteria
-            if criteria == "random":
-                
-                random_word = temp_key_list[random.randint(0, len(temp_key_list)-1)]
-                
-                #make copy from temporary list to prevent collision and remove rand word from both lists
-                temp_temp_key_list = temp_key_list.copy()
-                
-                temp_key_list.remove(random_word)
-                temp_temp_key_list.remove(random_word)
-                
-                #append temp_temp to key_list
-                key_list.append(temp_temp_key_list)
-            
-            elif criteria == "left":
-                temp_temp_key_list = temp_key_list.copy()
-                
-                # remove first item in list
-                temp_key_list.pop(0)
-                temp_temp_key_list.pop(0)
-                
-                #append temp_temp to key_list
-                key_list.append(temp_temp_key_list)
-            
-            elif criteria == "right":
-                temp_temp_key_list = temp_key_list.copy()
-                
-                # remove first item in list
-                temp_key_list.pop()
-                temp_temp_key_list.pop()
-                
-                #append temp_temp to key_list
-                key_list.append(temp_temp_key_list)
-                
-            elif criteria == "shortest":
-                shortest = min(filter(None, temp_key_list), key=len)
-                
-                temp_temp_key_list = temp_key_list.copy()
-                
-                # remove first item in list
-                temp_key_list.remove(shortest)
-                temp_temp_key_list.remove(shortest)
-                
-                #append temp_temp to key_list
-                key_list.append(temp_temp_key_list)
-            
-            elif criteria == "longest":
-                longest = max(filter(None, temp_key_list), key=len)
-                
-                temp_temp_key_list = temp_key_list.copy()
-                
-                # remove first item in list
-                temp_key_list.remove(longest)
-                temp_temp_key_list.remove(longest)
-                
-                #append temp_temp to key_list
-                key_list.append(temp_temp_key_list)
-                
-            else:
-                pass
-            
-        return key_list
-
-
-# further input sentence preparation
-def spec_char_deletion(input_sentences):
-    clean_sentences = []
-    for i in input_sentences:
-        clean = re.sub("r'\W+'",' ', i)
-        clean = clean.replace(".", "")
-        clean = clean.replace(",", "")
-        clean = clean.replace(":", "")
-        clean_sentences.append(clean)
-    return clean_sentences
-
-
 def keyword_focus(input_sentences, key_words, padding=0):
     filtered_input = []
     
     if len(input_sentences) == 0:
         return filtered_input
     
-    clean_input = spec_char_deletion(input_sentences)  #relevance?
-    
-    for sentence in clean_input:
+    for sentence in input_sentences:
         sentence = sentence.lower()
         tokens = sentence.split()
         
@@ -311,8 +173,13 @@ def keyword_focus(input_sentences, key_words, padding=0):
             right_pad = len(tokens)
             
         focus = tokens[left_pad : right_pad + 1]
-        filtered_input.append(" ".join(focus))
-        filtered_input[-1] = filtered_input[-1] + "."
+        focus_input = " ".join(focus)
+        
+        if focus_input[-1] != ".":
+            focus_input = focus_input + "."
+        
+        filtered_input.append(focus_input)
+
     return filtered_input
 
 
