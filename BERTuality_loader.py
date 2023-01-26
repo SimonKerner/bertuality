@@ -31,7 +31,7 @@ def wikipedia_loader(page, summary_or_text="summary", language="en"):
         return page_py.text
       
     
-def NewsAPI_loader(from_param, topic):
+def NewsAPI_loader(from_param, topic):           
     """
         topic: Advanced search is supported here:
         Surround phrases with quotes (") for exact match.
@@ -55,31 +55,48 @@ def NewsAPI_loader(from_param, topic):
     
     # get all headlines in list
     content = []
+    
     for article in all_articles:
-        
         description = article['description']
         #title = article['title']
         
         if len(description) > 0:    
-            filtered = re.sub('<[^>]*>', "", description)           # delete html tags
-            filtered = re.sub('<!--.*', "", filtered)               # also html tag
-            filtered = re.sub(r'\([^)]*\)', "", filtered)           # delete (asdf) in parenthesis 
-            filtered = re.sub(r'[A-Z]*\b\/[A-Z]+', "", filtered)    # delete GUANGZHOU/TOKYO/BANGKOK
-            filtered = re.sub("\r?\n|\r", "", filtered)             # delete line break
-            filtered = re.sub(r'(\s\w*…)', ".", filtered)           # delete a…
-            filtered = re.sub(r'(\s\w*\.{3})', ".", filtered)       # delete a...
-            filtered = filtered.replace("®", "")
-            filtered = filtered.replace("  ", " ")
-            filtered = filtered.replace(" -- ", "")
-            filtered = filtered.replace(" [...]", "")
-            filtered = filtered.replace("•", "")
+            filtered = re.sub(r'<[^>]*>', r"", description)                      # delete html tags
+            filtered = re.sub(r'<!--.*', r"", filtered)                          # also html tag
+            filtered = re.sub(r'&(?:[a-z\d]+|#\d+|#x[a-f\d]+);', r"", filtered)  # delete html special enteties
+            
+            filtered = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', filtered) # yearApple --> year Apple (but not iPhone)
+            
+            filtered = filtered.replace(r"…", r"...")
+            filtered = re.sub(r'\s\w{0,2}\.{3}', r"", filtered)      # delete a... if len a < 2
+            filtered = re.sub(r"\.{2,}", r"", filtered)              # delete if two or more "."
+            filtered = re.sub(r'\-{2,}', r"", filtered)
+            
+            filtered = re.sub(r'\([^)]*\)', r"", filtered)           # delete (asdf) in parenthesis 
+            filtered = re.sub(r'\[[^]]*\]', r"", filtered)           # delete [asdf] in brackets
+            filtered = re.sub(r'[A-Z]*\b\/[A-Z]+', r"", filtered)    # delete GUANGZHOU/TOKYO/BANGKOK
+            filtered = re.sub(r"#\w*", r"", filtered)                # delete hastag
+            
+            filtered = filtered.replace(r"®", r"")
+            filtered = filtered.replace(r"•", r"")
+            
+            filtered = filtered.replace(r"$", r" $ ")
+            filtered = filtered.replace(r"%", r" % ")
+                         
+            filtered = re.sub(r"\r?\n|\r", r".", filtered)                         # delete line break
+            filtered = re.sub(r"\.{2,}", r". ", filtered)                          # if .. after line break
+            filtered = re.sub(r'([a-zA-Z])(\.)([a-zA-Z])', r"\1\2 \3", filtered)   # a.a --> a. a (better sentence split)
+            filtered = re.sub(r'\s{2,}', r" ", filtered)                           # if two or more whitespace
+            
+            filtered = filtered.strip()
             
             if filtered[-1] != ".":
                 filtered = filtered + "."
-            
+                
             content.append(filtered)
+            
             #content.append(title)
-  
+    
     return content
 
 
