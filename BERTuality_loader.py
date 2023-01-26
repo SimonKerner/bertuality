@@ -7,6 +7,65 @@ from bs4 import BeautifulSoup
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
+
+"""
+    Data Clean Up
+        - prep articles for better use in BERT
+"""
+
+def text_clean_up(str_text):
+    prep = re.sub(r'<[^>]*>', r"", str_text)                      # delete html tags
+    prep = re.sub(r'<!--.*', r"", prep)                          # also html tag
+    prep = re.sub(r'&(?:[a-z\d]+|#\d+|#x[a-f\d]+);', r"", prep)  # delete html special enteties
+    
+    prep = prep.replace("\"", "")
+    
+    prep = prep.replace(r"…", r"...")
+    prep = re.sub(r'\s\w{0,2}\.{3}', r"", prep)      # delete a... if len a < 2
+    prep = re.sub(r"\.{2,}", r"", prep)              # delete if two or more "."
+    prep = re.sub(r'\-{1,}', r" ", prep)             # delete -
+    
+    prep = re.sub(r'\([^)]*\)', r"", prep)           # delete (asdf) in parenthesis 
+    prep = re.sub(r'\[[^]]*\]', r"", prep)           # delete [asdf] in brackets
+    prep = re.sub(r'[A-Z]*\b\/[A-Z]+', r"", prep)    # delete GUANGZHOU/TOKYO/BANGKOK
+    prep = re.sub(r"#\w*", r"", prep)                # delete hastag
+    prep = re.sub(r"(\d)(\,)(\d)", r"\1.\3", prep)   # 12,000 --> 12.000
+    prep = re.sub(r'([A-Z])s', r'\1', prep)        # delete CEOs --> CEO
+    
+    # special deletions -contractions
+    prep = re.sub(r"[’']s", r"", prep)              # delete apostroph s
+    prep = re.sub(r"[’']d", r"", prep)
+    prep = re.sub(r"[’']ll", r" will", prep)
+    prep = re.sub(r"n[’']t", r" not", prep)
+    prep = re.sub(r"n[’']re", r" are", prep)
+    prep = re.sub(r"n[’']ve", r" have", prep)
+    
+    # other replacements and deletions
+    prep = prep.replace(r"$", r" $ ")
+    prep = prep.replace(r"%", r" % ")       
+    prep = prep.replace("!", ".")
+    prep = prep.replace("?", ".")
+    prep = re.sub(r"[—<>|®•:“”\"+;]", r"", prep)            
+
+    #line replacements
+    prep = re.sub(r"\r?\s+\n+|\r", r".", prep)                     # delete line break
+    prep = re.sub(r"\r?\n|\r", r".", prep)                         # delete line break
+    prep = re.sub(r"\.{2,}", r". ", prep)                          # if .. after line break
+    prep = re.sub(r'([a-zA-Z])(\.)([a-zA-Z])', r"\1\2 \3", prep)   # a.a --> a. a (better sentence split)
+    prep = re.sub(r'\s{2,}', r" ", prep)                           # if two or more whitespace
+    
+    prep = prep.replace(",.", ". ")
+    
+    prep = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', prep) # yearApple --> year Apple (but not iPhone)
+    
+    prep = prep.strip()
+    
+    if prep[-1] != ".":
+        prep = prep + "."
+    
+    return prep
+
+
 """ 
      API/Scraper Calls for Websites
         - Wikipedia     -- working
@@ -55,60 +114,15 @@ def NewsAPI_loader(from_param, topic):
     
     # get all headlines in list
     content = []
-    
     for article in all_articles:
 
         description = article['description']
         #title = article['title']
         
         if len(description) > 0:    
-            filtered = re.sub(r'<[^>]*>', r"", description)                      # delete html tags
-            filtered = re.sub(r'<!--.*', r"", filtered)                          # also html tag
-            filtered = re.sub(r'&(?:[a-z\d]+|#\d+|#x[a-f\d]+);', r"", filtered)  # delete html special enteties
-            
-            filtered = filtered.replace("\"", "")
-            
-            filtered = filtered.replace(r"…", r"...")
-            filtered = re.sub(r'\s\w{0,2}\.{3}', r"", filtered)      # delete a... if len a < 2
-            filtered = re.sub(r"\.{2,}", r"", filtered)              # delete if two or more "."
-            filtered = re.sub(r'\-{1,}', r" ", filtered)              # delete -
-            
-            filtered = re.sub(r'\([^)]*\)', r"", filtered)           # delete (asdf) in parenthesis 
-            filtered = re.sub(r'\[[^]]*\]', r"", filtered)           # delete [asdf] in brackets
-            filtered = re.sub(r'[A-Z]*\b\/[A-Z]+', r"", filtered)    # delete GUANGZHOU/TOKYO/BANGKOK
-            filtered = re.sub(r"#\w*", r"", filtered)                # delete hastag
-            filtered = re.sub(r"(\d)(\,)(\d)", r"\1.\3", filtered)                 # 12,000 --> 12.000
-            
-            # special deletion 
-            filtered = re.sub(r"[’']s", r"", filtered)              # delete apostroph s
-            filtered = filtered.replace("!", ".")
-            filtered = filtered.replace("?", ".")
-            
-            # other replacements and deletions
-            filtered = filtered.replace(r"$", r" $ ")
-            filtered = filtered.replace(r"%", r" % ")
-            filtered = re.sub(r"[—<>|®•:“”\"]", r"", filtered)            
-
-            #line replacements
-            filtered = re.sub(r"\r?\s+\n+|\r", r".", filtered)                     # delete line break
-            filtered = re.sub(r"\r?\n|\r", r".", filtered)                         # delete line break
-            filtered = re.sub(r"\.{2,}", r". ", filtered)                          # if .. after line break
-            filtered = re.sub(r'([a-zA-Z])(\.)([a-zA-Z])', r"\1\2 \3", filtered)   # a.a --> a. a (better sentence split)
-            filtered = re.sub(r'\s{2,}', r" ", filtered)                           # if two or more whitespace
-            
-            filtered = filtered.replace(",.", ". ")
-            
-            filtered = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', filtered) # yearApple --> year Apple (but not iPhone)
-            
-            filtered = filtered.strip()
-            
-            if filtered[-1] != ".":
-                filtered = filtered + "."
-                
+            filtered = text_clean_up(description)
             content.append(filtered)
-            
-            #content.append(title)
-    
+
     return content
 
 
@@ -208,7 +222,8 @@ def get_articles(link_df):
         
         raw_html = " ".join(map(str, p_content))
         
-        filtered = re.sub('<[^>]*>', "", raw_html)
+        filtered = text_clean_up(raw_html)
+        
         filtered = filtered.replace("Sign up now! Sign up now! Sign up now? Sign up now!", "")     
         filtered = filtered.replace("""Sign up to Business TodayGet set for the working 
                                     day – we'll point you to the all the business 
