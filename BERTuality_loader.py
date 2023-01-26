@@ -57,6 +57,7 @@ def NewsAPI_loader(from_param, topic):
     content = []
     
     for article in all_articles:
+
         description = article['description']
         #title = article['title']
         
@@ -65,28 +66,39 @@ def NewsAPI_loader(from_param, topic):
             filtered = re.sub(r'<!--.*', r"", filtered)                          # also html tag
             filtered = re.sub(r'&(?:[a-z\d]+|#\d+|#x[a-f\d]+);', r"", filtered)  # delete html special enteties
             
-            filtered = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', filtered) # yearApple --> year Apple (but not iPhone)
+            filtered = filtered.replace("\"", "")
             
             filtered = filtered.replace(r"…", r"...")
             filtered = re.sub(r'\s\w{0,2}\.{3}', r"", filtered)      # delete a... if len a < 2
             filtered = re.sub(r"\.{2,}", r"", filtered)              # delete if two or more "."
-            filtered = re.sub(r'\-{2,}', r"", filtered)
+            filtered = re.sub(r'\-{1,}', r" ", filtered)              # delete -
             
             filtered = re.sub(r'\([^)]*\)', r"", filtered)           # delete (asdf) in parenthesis 
             filtered = re.sub(r'\[[^]]*\]', r"", filtered)           # delete [asdf] in brackets
             filtered = re.sub(r'[A-Z]*\b\/[A-Z]+', r"", filtered)    # delete GUANGZHOU/TOKYO/BANGKOK
             filtered = re.sub(r"#\w*", r"", filtered)                # delete hastag
+            filtered = re.sub(r"(\d)(\,)(\d)", r"\1.\3", filtered)                 # 12,000 --> 12.000
             
-            filtered = filtered.replace(r"®", r"")
-            filtered = filtered.replace(r"•", r"")
+            # special deletion 
+            filtered = re.sub(r"[’']s", r"", filtered)              # delete apostroph s
+            filtered = filtered.replace("!", ".")
+            filtered = filtered.replace("?", ".")
             
+            # other replacements and deletions
             filtered = filtered.replace(r"$", r" $ ")
             filtered = filtered.replace(r"%", r" % ")
-                         
+            filtered = re.sub(r"[—<>|®•:“”\"]", r"", filtered)            
+
+            #line replacements
+            filtered = re.sub(r"\r?\s+\n+|\r", r".", filtered)                     # delete line break
             filtered = re.sub(r"\r?\n|\r", r".", filtered)                         # delete line break
             filtered = re.sub(r"\.{2,}", r". ", filtered)                          # if .. after line break
             filtered = re.sub(r'([a-zA-Z])(\.)([a-zA-Z])', r"\1\2 \3", filtered)   # a.a --> a. a (better sentence split)
             filtered = re.sub(r'\s{2,}', r" ", filtered)                           # if two or more whitespace
+            
+            filtered = filtered.replace(",.", ". ")
+            
+            filtered = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', filtered) # yearApple --> year Apple (but not iPhone)
             
             filtered = filtered.strip()
             
