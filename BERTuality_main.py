@@ -4,11 +4,9 @@ from BERTuality_loader import NewsAPI_loader
 from BERTuality_loader import guardian_loader
 from BERTuality_loader import news_loader
 from BERTuality import nltk_sentence_split
-from BERTuality import remove_too_long_sentences
 from BERTuality import merge_pages
 from BERTuality import make_predictions
 from BERTuality import filter_list_final
-from BERTuality import keyword_creator
 from BERTuality import keyword_focus
 from BERTuality import load_actuality_dataset
 from BERTuality import learn_new_token
