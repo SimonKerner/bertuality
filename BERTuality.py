@@ -5,6 +5,7 @@ import re
 import nltk
 from nltk import tokenize
 import itertools
+import collections
 
 
 """
@@ -263,8 +264,8 @@ def pos_keywords(sample):
 
 
 """
-    BERT :
-        
+    BERT Prediction Pipeline:  
+        - uses fill_mask_pipeline
 """
 
 
@@ -319,6 +320,91 @@ def make_predictions(masked_sentence, sent_list, model, tokenizer):
     return pred
 
 
+def simple_pred_results(pred_query):
+    
+    if pred_query is None:
+        return 
+    
+    results = pd.DataFrame(columns=["Token", "Frequency", "max_score", "min_score", "mean_score", "sum_up_score"])
+    results["Token"] = pred_query["token1"].unique()
+    results["Frequency"] = results["Token"].map(pred_query["token1"].value_counts())
+    results["max_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].max())
+    results["min_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].min())
+    results["mean_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].mean())
+    results["sum_up_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].sum())
+    results = results.sort_values(by=["sum_up_score"], ascending=False, ignore_index=True)
+    return results
+
+
+"""
+    new tokenizer + detokenizer
+        - better detectability for word piece tokens
+        - able to find hidden ones (wp inside of wp)
+"""
+
+
+# flatten multidimensional list to 1-d
+def flatten(l):
+    for sub in l:
+        if isinstance(sub, collections.abc.Iterable) and not isinstance(sub, (str, bytes)):
+            yield from flatten(sub)
+        else:
+            yield sub
+
+# create lists of further tokenized token
+def find_hidden_word_pieces(word_piece, tokenizer):
+    
+    hidden_wp = []
+    
+    # tokenize algorithm
+    token = tokenizer.tokenize(word_piece)
+    
+    for tpos in range(len(token)):
+        if token[tpos] == "#": pass
+        elif token[tpos].startswith("##"):
+            hidden_wp.append(find_hidden_word_pieces(token[tpos], tokenizer))
+        else: hidden_wp.append(token[tpos])
+        
+    return hidden_wp
+        
+
+# new tokenizer - able to find hidden word_pieces 
+def better_tokenizer(sentence, tokenizer):
+    
+    better_tokens = []
+    
+    #initial tokenization
+    tokens = tokenizer.tokenize(sentence)
+    
+    #further tokenization
+    for t in tokens:
+        
+        # check if wordpiece has further wp_tokens
+        if t.startswith("##"):
+            wp_tokens = find_hidden_word_pieces(t, tokenizer)
+            wp_tokens = list(flatten(wp_tokens))
+            wp_tokens = ["##" + wp for wp in wp_tokens]
+            better_tokens.append(wp_tokens)
+        else: better_tokens.append(t)
+        
+    return list(flatten(better_tokens))
+
+
+def detokenizer(token_list, tokenizer):
+    detoken = tokenizer.convert_tokens_to_string(token_list)
+    detoken = re.sub(r'( )([\'\.])( ){0,}', r'\2', detoken)
+    detoken = re.sub(r'( )([,])( )', r'\2 ', detoken)
+    detoken = re.sub(r'([a-zA-Z])(\.)([a-zA-Z])', r"\1\2 \3", detoken)
+    return detoken
+
+
+"""
+    wp_prediction pipeline
+        - is a better prediciton pipeline than original one
+        - able to predict every kind of word
+"""
+
+
 def create_expand_sentences(tokens, wp_position, tokenizer):
     word_piece_input = []
     wp_position.sort()
@@ -327,16 +413,12 @@ def create_expand_sentences(tokens, wp_position, tokenizer):
     
     for p in wp_position:
         temp_sliced_out = sliced_out[:]
-        temp_sliced_out.insert(wp_position[0], tokens[p].replace("##", "").capitalize())
+        temp_sliced_out.insert(wp_position[0], tokens[p].replace("##", ""))
         
         # convert tokenized sentence back to normal
-        detoken = tokenizer.convert_tokens_to_string(temp_sliced_out)
-        detoken = re.sub(r'( )([\'\.])( ){0,}', r'\2', detoken)
-        detoken = re.sub(r'( )([,])( )', r'\2 ', detoken)
-        detoken = re.sub(r'([a-zA-Z])(\.)([a-zA-Z])', r"\1\2 \3", detoken)
+        detoken = detokenizer(temp_sliced_out, tokenizer)
         
         word_piece_input.append(detoken)
-        
     return word_piece_input
     
 
@@ -378,11 +460,10 @@ def word_piece_prediction(sample, input_sentences, model, tokenizer):
     
     #get input sentences
     for sentence in input_sentences:
-        #tokenize sentence
-        tokens = tokenizer.tokenize(sentence)
+
+        #tokens = tokenizer.tokenize(sentence)
+        tokens = better_tokenizer(sentence, tokenizer)
         token_length = len(tokens)
-        
-        # first path --> sentence has no special word pieces -- no ## found -nomal-pred
         
         # second path --> sentence has word pieces -- can be found with ## - wp-pred
         wp_append_start = False
@@ -402,7 +483,7 @@ def word_piece_prediction(sample, input_sentences, model, tokenizer):
                     wp_position.append(token_pos - 1)    # append start of word piece word (==equal to one word) 
                     wp_append_start = True
                     
-                #  "##" is last word --> make prediction now, because range runs out
+                # "##" is last word --> make prediction now, because range runs out
                 elif wp_append_start == True and token_pos == token_length - 1:
                     
                     # get results of prediction in DataFrame
@@ -434,20 +515,9 @@ def word_piece_prediction(sample, input_sentences, model, tokenizer):
     return wp_results
 
 
-def simple_pred_results(pred_query):
-    
-    if pred_query is None:
-        return 
-    
-    results = pd.DataFrame(columns=["Token", "Frequency", "max_score", "min_score", "mean_score", "sum_up_score"])
-    results["Token"] = pred_query["token1"].unique()
-    results["Frequency"] = results["Token"].map(pred_query["token1"].value_counts())
-    results["max_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].max())
-    results["min_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].min())
-    results["mean_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].mean())
-    results["sum_up_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].sum())
-    results = results.sort_values(by=["sum_up_score"], ascending=False, ignore_index=True)
-    return results
+"""
+    dataset and other
+"""
 
 
 def load_actuality_dataset(tokenizer, delete_unknown_token = False):
