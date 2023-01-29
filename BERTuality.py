@@ -15,10 +15,10 @@ from BERTuality_loader import news_loader
 """
       
 
-def filterForOneWord(sent_list, term):  
+def filterForOneWord(input_sentences, term):  
     result = []
-    for i in range(len(sent_list)):
-        words = sent_list[i].split()
+    for i in range(len(input_sentences)):
+        words = input_sentences[i].split()
         words = [x.lower().strip() for x in words]  #lowercase and strip
         words = [x.replace(".", "") for x in words] #remove "." because otherwise "." belongs to the word
         words = [x.replace(",", "") for x in words] #remove "," because otherwise "," belongs to the word
@@ -30,14 +30,14 @@ def filterForOneWord(sent_list, term):
         term = term.lower().strip()
         for word in words:
             if term in word:    #term muss nur in Wort sein: "ama" steckt in "Obamas"
-                result.append(sent_list[i])
+                result.append(input_sentences[i])
     return result  
 
 
-def remove_duplicates(sent_list):   # durch Iterieren wird die originale Reihenfolge beibehalten!
+def remove_duplicates(input_sentences):   # durch Iterieren wird die originale Reihenfolge beibehalten!
     result = []
-    for i in range(len(sent_list)):
-        a = sent_list[i]
+    for i in range(len(input_sentences)):
+        a = input_sentences[i]
         if a not in result:
             result.append(a)
     return result
@@ -52,23 +52,23 @@ def create_subsets(mylist, subset_size):
     return subsets
 
 
-def filter_list(sent_list, terms):
-    result = sent_list
+def filter_list(input_sentences, terms):
+    result = input_sentences
     for term in terms:
         result = filterForOneWord(result, term)
     result = remove_duplicates(result)
     return result
 
 
-def filter_list_final(sent_list, twod_list, tokenizer):    #twod_list = 2 dimensional list, but can also be a one-dimensional list!
+def filter_list_final(input_sentences, twod_list, tokenizer):    #twod_list = 2 dimensional list, but can also be a one-dimensional list!
     result = [] 
     
     if isinstance(twod_list[0], list):      # if the list is 2d
         for lst in twod_list:
-            result += filter_list(sent_list, lst)
+            result += filter_list(input_sentences, lst)
     
     if isinstance(twod_list[0], str):                   # so that the given list can also be one-dimensional!
-        result += filter_list(sent_list, twod_list)
+        result += filter_list(input_sentences, twod_list)
         
     result = remove_duplicates(result)
     
@@ -77,20 +77,20 @@ def filter_list_final(sent_list, twod_list, tokenizer):    #twod_list = 2 dimens
     return result
 
 
-def filter_for_keyword_subsets(sent_list, keywords, tokenizer, subset_size):
+def filter_for_keyword_subsets(input_sentences, keywords, tokenizer, subset_size):
     keyword_subsets = create_subsets(keywords, subset_size)
     
-    return filter_list_final(sent_list, keyword_subsets, tokenizer)
+    return filter_list_final(input_sentences, keyword_subsets, tokenizer)
     
     
-def remove_too_long_sentences(sent_list, tokenizer):
-    short_sent_list = []
-    for i in range(len(sent_list)):
-        encoding = tokenizer.encode(sent_list[i])
+def remove_too_long_sentences(input_sentences, tokenizer):
+    short_input_sentences = []
+    for i in range(len(input_sentences)):
+        encoding = tokenizer.encode(input_sentences[i])
         if len(encoding) <= 102:    #512/5 = 102; max token length: 512, each sentence is taken 5 times
-            short_sent_list.append(sent_list[i])
+            short_input_sentences.append(input_sentences[i])
             
-    return short_sent_list
+    return short_input_sentences
     
 
 # overall text_filter for page loader  
@@ -195,7 +195,7 @@ def ner_keywords(sample, ner_model="bert-base-NER"):
     tokenizer = AutoTokenizer.from_pretrained("dslim/" + ner_model)
     model = AutoModelForTokenClassification.from_pretrained("dslim/" + ner_model)
     nlp = pipeline("ner", model = model, tokenizer=tokenizer)
-    sample[0] = sample[0].replace(".", "")
+    sample = sample.replace(".", "")
 
     learn_new_token(sample, model, tokenizer)
     ner_results = nlp(sample)
@@ -218,7 +218,7 @@ def remove_longer_tuples(tuples_list):
 
 # create keywords by POS tagging
 def pos_keywords(sample):
-    sent = sample[0].replace("[MASK]", "")
+    sent = sample.replace("[MASK]", "")
     
     # create token and pos-tags
     token = nltk.word_tokenize(sent)
@@ -270,10 +270,10 @@ def pos_keywords(sample):
 
 
 # make predictions
-def make_predictions(masked_sentence, sent_list, model, tokenizer):
+def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_input=0):
     
-    if len(sent_list) == 0:
-        return
+    if len(input_sentences) == 0: return
+    if max_input != 0: input_sentences = input_sentences[:max_input]
     
     # pipeline pre-trained
     fill_mask_pipeline_pre = pipeline("fill-mask", model=model, tokenizer=tokenizer)
@@ -283,7 +283,7 @@ def make_predictions(masked_sentence, sent_list, model, tokenizer):
     pred = pd.DataFrame(columns = columns)
     
     #fill df
-    pred['input'] = sent_list
+    pred['input'] = input_sentences
     pred['masked'] = masked_sentence
 
     #make predictions
@@ -468,14 +468,16 @@ def word_piece_temp_df_pred(mask_sentence, tokens, wp_position, model, tokenizer
                              'score1': piece_pred["score1"].mean()}])
     return temp_df
 
-
-def word_piece_prediction(sample, input_sentences, model, tokenizer, max_input = 0, combine=True, threshold=None):
-    
+import time
+def word_piece_prediction(sample, input_sentences, model, tokenizer, max_input=0, combine=True, threshold=None):
+    start_time = time.perf_counter()
     # find index of ali ##ba ##ba
     # rule word bevore ## is always part of whole word
     # find whole word pieces
-    
     if max_input != 0: input_sentences = input_sentences[:max_input]
+    
+    print("\nSentence:", sample)
+    print("Input Size:", len(input_sentences))
     
     #output storage
     wp_results = pd.DataFrame(columns=["masked", "input", "input + masked", "token1", "score1"])
@@ -546,9 +548,37 @@ def word_piece_prediction(sample, input_sentences, model, tokenizer, max_input =
         # status prints
         status+=1
         print("Progress -->", round(status/sen_size*100, 2), "%")
+    end_time = time.perf_counter()
+    print(f"Performance: {end_time - start_time:0.4f} seconds")
           
     #return list of sentences with  --> return predicted sentences from focus
     return wp_results
+
+
+"""
+    Learn New Tokens - failed
+"""
+
+# learn all gold token in given dataset
+def learn_all_new_gold_token(dataset, model, tokenizer):
+    # create list of gold token from given dataset
+    gold_token = list(dataset['Gold'])
+    
+    # add new token to tokenizer
+    num_added_toks = tokenizer.add_tokens(gold_token)
+    model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
+  
+    
+# learn one new gold token in sample, sample has to look like this: ['sentence', 'gold token']    
+def learn_new_token(sample, model, tokenizer):
+    # create list of all token form given sample ['sentence', 'gold token']
+    gold_token = [sample[1]]
+    other_token = sample[0].split()
+    new_token = gold_token + other_token #1st new token gets id 30522
+    
+    # add new token to tokenizer
+    num_added_toks = tokenizer.add_tokens(new_token)
+    model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
 
 
 """
@@ -591,31 +621,75 @@ def load_actuality_dataset(tokenizer, delete_unknown_token = False):
         
     # delete rows that the tokenizer does not know the vaule of
     #for i in actuality_dataset:
-        
+    actuality_dataset = actuality_dataset.reset_index(drop=True)
     return actuality_dataset
 
 
-# learn all gold token in given dataset
-def learn_all_new_gold_token(dataset, model, tokenizer):
-    # create list of gold token from given dataset
-    gold_token = list(dataset['Gold'])
+def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, threshold=0.9, max_input=20):
     
-    # add new token to tokenizer
-    num_added_toks = tokenizer.add_tokens(gold_token)
-    model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
-  
+    actuality_dataset = actuality_dataset.reset_index(drop=True)
     
-# learn one new gold token in sample, sample has to look like this: ['sentence', 'gold token']    
-def learn_new_token(sample, model, tokenizer):
-    # create list of all token form given sample ['sentence', 'gold token']
-    gold_token = [sample[1]]
-    other_token = sample[0].split()
-    new_token = gold_token + other_token #1st new token gets id 30522
+    results = []
+    error = []
+    for index in range(len(actuality_dataset)):
+        
+        query = query_pipeline(actuality_dataset["MaskSatz"][index], from_date, tokenizer)
+        
+        # safety mech
+        if len(query["06_focus_query"])==0: 
+            samp_results = {"01_Nummer": actuality_dataset["Nummer"][index],
+                   "02_MaskSatz": actuality_dataset["MaskSatz"][index],
+                   "03_Original": actuality_dataset["Original"][index],
+                   "04_Gold":actuality_dataset["Gold"][index],
+                   "05_query": query,
+                   "06_Prediction": "Error"}
+            results.append(samp_results)
+            error += index,
+            continue
+        
+        # Test Knowlede of BERT without input
+        kn_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], [""], model, tokenizer, max_input=max_input)              
+        kn_simple_results = simple_pred_results(kn_pred_query)
+        
+        # Test Original BERT with input
+        or_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], query["06_focus_query"], model, tokenizer, max_input=max_input)              
+        or_simple_results = simple_pred_results(or_pred_query)  
+        
+        # Test full Word Piece Prediction
+        wp_pred_query = word_piece_prediction(actuality_dataset["MaskSatz"][index], query["06_focus_query"], model, tokenizer, 
+                                              threshold=threshold, max_input=max_input)              
+        wp_simple_results = simple_pred_results(wp_pred_query)                                  
+        
+        
+        samp_results = {"01_Nummer": actuality_dataset["Nummer"][index],
+                   "02_MaskSatz": actuality_dataset["MaskSatz"][index],
+                   "03_Original": actuality_dataset["Original"][index],
+                   "04_Gold":actuality_dataset["Gold"][index],
+                   "05_query": query,
+                   
+                   "06_kn_pred_query": kn_pred_query,
+                   "07_kn_simple_results": kn_simple_results,
+                   "08_kn_word": kn_simple_results["Token"][0],
+                   "09_kn_score": kn_simple_results["sum_up_score"][0],
+                   
+                   "10_or_pred_query": kn_pred_query,
+                   "11_or_simple_results": or_simple_results,
+                   "12_or_word": or_simple_results["Token"][0],
+                   "13_or_score": or_simple_results["sum_up_score"][0],
+                   
+                   "14_wp_pred_query": wp_pred_query,
+                   "15_wp_simple_results": wp_simple_results,
+                   "16_wp_word": wp_simple_results["Token"][0],
+                   "17_wp_score": wp_simple_results["sum_up_score"][0],
+                   }
+        results.append(samp_results)
     
-    # add new token to tokenizer
-    num_added_toks = tokenizer.add_tokens(new_token)
-    model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
-
+    print("\nActuality_Dataset Prediction Summary:")
+    print("Length Dataset:", len(results))
+    print("Predictions on:", round((len(results) - len(error))/len(results)*100, 2), "% of Dataset")
+    print("No Predictions for Index:", error)
+    
+    return results
 
 
 

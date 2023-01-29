@@ -119,7 +119,7 @@ def NewsAPI_loader(from_param, topic):
         description = article['description']
         #title = article['title']
         
-        if len(description) > 0:    
+        if type(description) != type(None) and len(description) > 0:    
             filtered = text_clean_up(description)
             content.append(filtered)
 

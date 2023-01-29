@@ -17,12 +17,13 @@ from BERTuality import simple_pred_results
 from BERTuality import filter_for_keyword_subsets
 from BERTuality import word_piece_prediction
 from BERTuality import query_pipeline
+from BERTuality import automatic_dataset_pred
 
 # tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
+#tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 
 # model: BERT pre-trained
-model = BertForMaskedLM.from_pretrained('bert-large-uncased')
+#model = BertForMaskedLM.from_pretrained('bert-large-uncased')
 
 #Wikipedia Covid Test
 """
@@ -413,41 +414,12 @@ wp_simple_results = simple_pred_results(wp_pred_query)
 
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-
 # model: BERT pre-trained
 model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
-# load dataset with known gold token
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-sample = ["President [MASK] is the actual leader of France."]
-
-# defaults subset_size = 2 and word_padding = 5
-query = query_pipeline(sample, "2023-01-01", tokenizer)
-
-wp_pred_query = word_piece_prediction(sample[0], query["06_focus_query"], model, tokenizer, threshold=0.9, max_input=20)              
-wp_simple_results = simple_pred_results(wp_pred_query)                                  
-
-pred_query = make_predictions(sample[0], query["06_focus_query"], model, tokenizer)              
-simple_results = simple_pred_results(pred_query)  
-
-# TODO
-def automatic_dataset_pred(dataset):
-    pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+act = automatic_dataset_pred(actuality_dataset[23:], "2023-01-01", tokenizer, model, threshold=0.9, max_input=1)
 
 
 
