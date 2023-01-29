@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from datetime import date
-from dateutil.relativedelta import relativedeltagit
+from dateutil.relativedelta import relativedelta
 
 
 """
