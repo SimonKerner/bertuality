@@ -16,6 +16,7 @@ from BERTuality import pos_keywords
 from BERTuality import simple_pred_results
 from BERTuality import filter_for_keyword_subsets
 from BERTuality import word_piece_prediction
+from BERTuality import query_pipeline
 
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
@@ -89,7 +90,7 @@ key_words = ["Chancellor", "Merkel"]
 key_words_2 = ["Chancellor", "scholz"]
 
 
-query_pred = make_predictions(masked_2, filter_list_final(merged_query, key_words_2), model, tokenizer)
+pred_query = make_predictions(masked_2, filter_list_final(merged_query, key_words_2), model, tokenizer)
 #path_pred = make_predictions(masked, filter_list_final(merged_path, key_words))
 """
 
@@ -103,7 +104,7 @@ merged_query = merge_pages(split_query, tokenizer)
 masked = "Ukraine is in a war against [MASK]."
 key_words = ["Ukraine", "war"]
 
-query_pred = make_predictions(masked, filter_list_final(merged_query, key_words), model, tokenizer)
+pred_query = make_predictions(masked, filter_list_final(merged_query, key_words), model, tokenizer)
 """
 
 """
@@ -166,7 +167,7 @@ extraction_query = filter_list_final(merged_query, key_words)
 #focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample[0], extraction_query, model, tokenizer)
+pred_query = make_predictions(sample[0], extraction_query, model, tokenizer)
 """
 
 # Test 2
@@ -195,7 +196,7 @@ extraction_query = filter_list_final(merged_query, key_words)
 #focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample[0], extraction_query, model, tokenizer)
+pred_query = make_predictions(sample[0], extraction_query, model, tokenizer)
 """
 
 
@@ -284,7 +285,7 @@ extraction_query = filter_list_final(merged_query, key_words)
 focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
+pred_query = make_predictions(sample[0], focus_query, model, tokenizer)
 """
 
 
@@ -329,11 +330,11 @@ extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer
 focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
-#query_pred_info = make_predictions(sample[0], extraction_query, model, tokenizer)
+pred_query = make_predictions(sample[0], focus_query, model, tokenizer)
+#pred_query_info = make_predictions(sample[0], extraction_query, model, tokenizer)
 
-simple_results = simple_pred_results(query_pred)
-#simple_results_info = simple_pred_results(query_pred_info)
+simple_results = simple_pred_results(pred_query)
+#simple_results_info = simple_pred_results(pred_query_info)
 
 # ERGEBNIS NEU: Es wurde aufgezeigt, das BERT unter gelerntem Input aus dem Internet andere Predictions 
 # für das MASK Word abgibt und Tim Cook mit großem Score nun als CEO von Apple vorhersagt
@@ -358,6 +359,7 @@ simple_results = simple_pred_results(query_pred)
                 MAIN TEST 2 - WP PREDICTION   
 """
 
+"""
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased-whole-word-masking')
 
@@ -367,7 +369,7 @@ model = BertForMaskedLM.from_pretrained('bert-large-uncased-whole-word-masking')
 # 1. Alle Tokens sind unter BERT bekannt
 
 # load dataset with known gold token
-#actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
+actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
 # create sample and learn new token from sample
 #sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
@@ -399,11 +401,56 @@ extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer
 focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample3[0], focus_query, model, tokenizer)                # Original
-wp_query_pred = word_piece_prediction(sample3[0], focus_query, model, tokenizer)        # WP_Pred
+pred_query = make_predictions(sample3[0], focus_query, model, tokenizer)               
+wp_pred_query = word_piece_prediction(sample3[0], focus_query, model, tokenizer, threshold=0.9, max_input=10)     
+
+# fancy results
+simple_results = simple_pred_results(pred_query)                                                
+wp_simple_results = simple_pred_results(wp_pred_query)                                 
+"""
 
 
-simple_results = simple_pred_results(query_pred)                                        # Original         
-wp_simple_results = simple_pred_results(wp_query_pred)                                  # WP_Pred
+
+# tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+# model: BERT pre-trained
+model = BertForMaskedLM.from_pretrained('bert-base-uncased')
+
+# load dataset with known gold token
+actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
+
+sample = ["President [MASK] is the actual leader of France."]
+
+# defaults subset_size = 2 and word_padding = 5
+query = query_pipeline(sample, "2023-01-01", tokenizer)
+
+wp_pred_query = word_piece_prediction(sample[0], query["06_focus_query"], model, tokenizer, threshold=0.9, max_input=20)              
+wp_simple_results = simple_pred_results(wp_pred_query)                                  
+
+pred_query = make_predictions(sample[0], query["06_focus_query"], model, tokenizer)              
+simple_results = simple_pred_results(pred_query)  
+
+# TODO
+def automatic_dataset_pred(dataset):
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
