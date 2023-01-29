@@ -77,10 +77,10 @@ pred_2_own_keywords = make_predictions(masked_sentence, filter_list_final(merged
 query, query_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", query="Scholz")
 #path, path_df = guardian_loader(from_date="2022-08-01", to_date="2022-12-15", path="politics")
 
-filtered_query = nltk_sentence_split(query)
+split_query = nltk_sentence_split(query)
 #filtered_path = nltk_sentence_split(path)
 
-merged_query = merge_pages(filtered_query, tokenizer)
+merged_query = merge_pages(split_query, tokenizer)
 #merged_path = merge_pages(filtered_path)
 
 masked = "Chancellor Merkel is the [MASK] leader of Germany."
@@ -97,8 +97,8 @@ query_pred = make_predictions(masked_2, filter_list_final(merged_query, key_word
 """
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-17', 'Ukraine')
 
-filtered_query = nltk_sentence_split(news_api_query, guardian_query)
-merged_query = merge_pages(filtered_query, tokenizer)
+split_query = nltk_sentence_split(news_api_query, guardian_query)
+merged_query = merge_pages(split_query, tokenizer)
 
 masked = "Ukraine is in a war against [MASK]."
 key_words = ["Ukraine", "war"]
@@ -156,17 +156,17 @@ key_words = ["ukraine", "war"]
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-05', key_words)
-filtered_query = nltk_sentence_split(news_api_query, guardian_query)
-merged_query = merge_pages(filtered_query, tokenizer)
+split_query = nltk_sentence_split(news_api_query, guardian_query)
+merged_query = merge_pages(split_query, tokenizer)
 
 #filter information out of full article list
-info_query = filter_list_final(merged_query, key_words)
+extraction_query = filter_list_final(merged_query, key_words)
 
 # focus on relevant part of sentence
-#focus_query = keyword_focus(info_query, key_words, 5)
+#focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample[0], info_query, model, tokenizer)
+query_pred = make_predictions(sample[0], extraction_query, model, tokenizer)
 """
 
 # Test 2
@@ -185,17 +185,17 @@ pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-12-15', 'key_words')
-filtered_query = nltk_sentence_split(news_api_query, guardian_query)
-merged_query = merge_pages(filtered_query, tokenizer)
+split_query = nltk_sentence_split(news_api_query, guardian_query)
+merged_query = merge_pages(split_query, tokenizer)
 
 #filter information out of full article list
-info_query = filter_list_final(merged_query, key_words)
+extraction_query = filter_list_final(merged_query, key_words)
 
 # focus on relevant part of sentence
-#focus_query = keyword_focus(info_query, key_words, 5)
+#focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
-query_pred = make_predictions(sample[0], info_query, model, tokenizer)
+query_pred = make_predictions(sample[0], extraction_query, model, tokenizer)
 """
 
 
@@ -274,14 +274,14 @@ pos_keywords = pos_keywords(sample)
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-09-01', key_words)    #using key_words weil pos_keywords prime enthält, was einen error verursacht
-filtered_query = nltk_sentence_split(news_api_query, guardian_query) 
-merged_query = merge_pages(filtered_query, tokenizer)
+split_query = nltk_sentence_split(news_api_query, guardian_query) 
+merged_query = merge_pages(split_query, tokenizer)
 
 #filter information out of full article list
-info_query = filter_list_final(merged_query, key_words)
+extraction_query = filter_list_final(merged_query, key_words)
 
 # focus on relevant part of sentence
-focus_query = keyword_focus(info_query, key_words, 5)
+focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
 query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
@@ -318,19 +318,19 @@ simple_pre_know = simple_pred_results(pretrained_knowledge)
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2023-01-05', key_words)
-filtered_query = nltk_sentence_split(news_api_query, guardian_query)
-merged_query = merge_pages(filtered_query)
+split_query = nltk_sentence_split(news_api_query, guardian_query)
+merged_query = merge_pages(split_query)
 
 #filter information out of full article list
-#info_query = filter_list_final(merged_query, key_words, tokenizer)
-info_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, 2)
+#extraction_query = filter_list_final(merged_query, key_words, tokenizer)
+extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, 2)
 
 # focus on relevant part of sentence
-focus_query = keyword_focus(info_query, key_words, 5)
+focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
 query_pred = make_predictions(sample[0], focus_query, model, tokenizer)
-#query_pred_info = make_predictions(sample[0], info_query, model, tokenizer)
+#query_pred_info = make_predictions(sample[0], extraction_query, model, tokenizer)
 
 simple_results = simple_pred_results(query_pred)
 #simple_results_info = simple_pred_results(query_pred_info)
@@ -388,15 +388,15 @@ key_words = pos_keywords(sample3)
 
 # load news from guardian and news_api
 news_api_query, guardian_query, guardian_query_df = news_loader('2022-10-05', key_words)
-filtered_query = nltk_sentence_split(news_api_query, guardian_query)
-merged_query = merge_pages(filtered_query)
+split_query = nltk_sentence_split(news_api_query, guardian_query)
+merged_query = merge_pages(split_query)
 
 #filter information out of full article list
-#info_query = filter_list_final(merged_query, key_words, tokenizer)
-info_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, 2)
+#extraction_query = filter_list_final(merged_query, key_words, tokenizer)
+extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, 2)
 
 # focus on relevant part of sentence
-focus_query = keyword_focus(info_query, key_words, 5)
+focus_query = keyword_focus(extraction_query, key_words, 5)
 
 # make prediction
 query_pred = make_predictions(sample3[0], focus_query, model, tokenizer)                # Original
