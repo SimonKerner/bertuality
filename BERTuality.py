@@ -6,7 +6,7 @@ import nltk
 from nltk import tokenize
 import itertools
 import collections
-
+from BERTuality_loader import news_loader
 
 """
     Data Preparation
@@ -318,6 +318,27 @@ def make_predictions(masked_sentence, sent_list, model, tokenizer):
     pred['score3'] = score3
     
     return pred
+
+
+# main query for input data --> returns dict, but changeable to whatever
+def query_pipeline(sample, from_date, tokenizer, subset_size=2, word_padding=5):
+    
+    key_words = pos_keywords(sample)
+    news_api_query, guardian_query, guardian_query_df = news_loader(from_date, key_words)
+    
+    split_query = nltk_sentence_split(news_api_query, guardian_query)
+    merged_query = merge_pages(split_query)
+    extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, subset_size)
+    focus_query = keyword_focus(extraction_query, key_words, word_padding)
+    
+    query_dict = {"01_sample": sample,
+                  "02_keywords": key_words,
+                  "03_split_query": split_query,
+                  "04_merged_query": merged_query,
+                  "05_extraction_query": extraction_query,
+                  "06_focus_query": focus_query}
+    
+    return query_dict
 
 
 def simple_pred_results(pred_query):
