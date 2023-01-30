@@ -182,6 +182,7 @@ def keyword_focus(input_sentences, key_words, padding=0):
         
         filtered_input.append(focus_input)
     
+    filtered_input.sort(key=len, reverse=True)
     filtered_input = [item for items, c in Counter(filtered_input).most_common() for item in [items] * c]
     
     return filtered_input
