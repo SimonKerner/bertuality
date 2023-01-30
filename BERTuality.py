@@ -482,7 +482,7 @@ def word_piece_prediction(sample, input_sentences, model, tokenizer, max_input=0
     # find whole word pieces
     if max_input != 0: input_sentences = input_sentences[:max_input]
     
-    print("\nSentence:", sample)
+    print("Sentence:", sample)
     print("Input Size:", len(input_sentences))
     
     #output storage
@@ -631,7 +631,7 @@ def load_actuality_dataset(tokenizer, delete_unknown_token = False):
     return actuality_dataset
 
 
-def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, threshold=0.9, max_input=20):
+def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, subset_size=2, word_padding=5, threshold=0.9, max_input=20):
     
     actuality_dataset = actuality_dataset.reset_index(drop=True)
     
@@ -639,7 +639,9 @@ def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, thres
     error = []
     for index in range(len(actuality_dataset)):
         
-        query = query_pipeline(actuality_dataset["MaskSatz"][index], from_date, tokenizer)
+        print(f"\nDataset Prediction Progress [{index+1}/{len(actuality_dataset)}]")
+        
+        query = query_pipeline(actuality_dataset["MaskSatz"][index], from_date, tokenizer, subset_size=subset_size, word_padding=word_padding)
         
         # safety mech
         if len(query["06_focus_query"])==0: 
