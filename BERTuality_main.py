@@ -401,10 +401,6 @@ extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer
 # focus on relevant part of sentence
 focus_query = keyword_focus(extraction_query, key_words, 5)
 
-<<<<<<< HEAD
-"""
-=======
->>>>>>> 21a7bc2ca70a2d2a76f0651f33c3764c29d57ac2
 # make prediction
 pred_query = make_predictions(sample3, focus_query, model, tokenizer)               
 wp_pred_query = word_piece_prediction(sample3, focus_query, model, tokenizer, threshold=0.9, max_input=10)   
@@ -423,20 +419,8 @@ model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-<<<<<<< HEAD
 results = automatic_dataset_pred(actuality_dataset[20:25], "2022-04-01", tokenizer, model, threshold=0.9, max_input=2)
 
-
-
-"""
-
-
-
-
-
-=======
-results = automatic_dataset_pred(actuality_dataset, "2022-04-01", tokenizer, model, threshold=0.9, max_input=5)
->>>>>>> 21a7bc2ca70a2d2a76f0651f33c3764c29d57ac2
 
 
 
