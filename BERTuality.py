@@ -6,6 +6,7 @@ import nltk
 from nltk import tokenize
 import itertools
 import collections
+from collections import Counter
 from BERTuality_loader import news_loader
 
 """
@@ -180,7 +181,9 @@ def keyword_focus(input_sentences, key_words, padding=0):
             focus_input = focus_input + "."
         
         filtered_input.append(focus_input)
-
+    
+    filtered_input = [item for items, c in Counter(filtered_input).most_common() for item in [items] * c]
+    
     return filtered_input
 
 
