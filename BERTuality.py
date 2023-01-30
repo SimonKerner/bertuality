@@ -94,7 +94,7 @@ def remove_too_long_sentences(input_sentences, tokenizer):
     
 
 # overall text_filter for page loader  
-def nltk_sentence_split(*page_loader):
+def nltk_sentence_split(page_loader):
     # list holds many pages
     
     filtered_information = []
@@ -324,9 +324,11 @@ def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_inp
 def query_pipeline(sample, from_date, tokenizer, subset_size=2, word_padding=5):
     
     key_words = pos_keywords(sample)
-    news_api_query, guardian_query, guardian_query_df = news_loader(from_date, key_words)
+    #news_api_query, guardian_query, guardian_query_df = news_loader(from_date, key_words)
+    loader_query = news_loader(from_date, key_words)
     
-    split_query = nltk_sentence_split(news_api_query, guardian_query)
+    #split_query = nltk_sentence_split(news_api_query, guardian_query)
+    split_query = nltk_sentence_split(loader_query)
     merged_query = merge_pages(split_query)
     extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, subset_size)
     focus_query = keyword_focus(extraction_query, key_words, word_padding)

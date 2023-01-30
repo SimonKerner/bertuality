@@ -1,4 +1,4 @@
-import wikipediaapi
+import wikipedia
 from newsapi import NewsApiClient
 import re
 import pandas as pd
@@ -27,6 +27,7 @@ def text_clean_up(str_text):
     
     prep = re.sub(r'\([^)]*\)', r"", prep)           # delete (asdf) in parenthesis 
     prep = re.sub(r'\[[^]]*\]', r"", prep)           # delete [asdf] in brackets
+    prep = re.sub(r'\{[^]]*\}', r"", prep)           # delete {asdf}
     prep = re.sub(r'[A-Z]*\b\/[A-Z]+', r"", prep)    # delete GUANGZHOU/TOKYO/BANGKOK
     prep = re.sub(r"#\w*", r"", prep)                # delete hastag
     prep = re.sub(r"(\d)(\,)(\d)", r"\1.\3", prep)   # 12,000 --> 12.000
@@ -45,7 +46,7 @@ def text_clean_up(str_text):
     prep = prep.replace(r"%", r" % ")       
     prep = prep.replace("!", ".")
     prep = prep.replace("?", ".")
-    prep = re.sub(r"[—<>|®•:“”\"+;]", r"", prep)            
+    prep = re.sub(r"[—<>|®•:“”\"+;=]", r"", prep)            
 
     #line replacements
     prep = re.sub(r"\r?\s+\n+|\r", r".", prep)                     # delete line break
@@ -77,17 +78,20 @@ def text_clean_up(str_text):
 """
 
 
-def wikipedia_loader(page, summary_or_text="summary", language="en"):
-    # Wikipedia Import and Filter
-    wiki_wiki = wikipediaapi.Wikipedia(language)
-    page_py = wiki_wiki.page(page)
-
-    if summary_or_text == "summary":           
-        # get page summary
-        return page_py.summary
-    elif summary_or_text == "text":            
-        # get all page text
-        return page_py.text
+def wikipedia_loader(keywords):
+    keywords = [i[0].upper() + i[1:] for i in keywords]
+    srsearch = " ".join(keywords)
+    
+    response = requests.get("https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&formatversion=2"
+                            + "&srsearch=" + srsearch + "&prop=extracts&srnamespace=0&srinfo=totalhits"
+                            + "&srprop=wordcount%7Csnippet&srsort=relevance&srlimit=10")
+    json = response.json()
+    
+    titles = [i["title"] for i in json["query"]["search"]] 
+    pages = [wikipedia.page(t).content for t in titles]
+    clean_pages = [text_clean_up(i).replace(" ", "_") for i in pages]
+    
+    return clean_pages
       
     
 def NewsAPI_loader(from_param, topic):           
@@ -199,7 +203,6 @@ def guardian_call(from_date, to_date, query, path, order_by, api_key):
     elif query == "" and path != "":
         json_responses = get_results_for_path_lookup(from_date, to_date, order_by, path, api_key)
     
-    
     # find all articels with status = "error" and drop from list
     # else results in error in dataFrame conversion ==> [results]
     clean_json_responses = []
@@ -241,7 +244,7 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
     
     # filter for type == "artice" (deletes interactive, audio, liveblog, etc.)
     if len(guardian_df) == 0:                                                              
-        return [], guardian_df
+        return []
     
     guardian_df = guardian_df.loc[guardian_df['type']=="article"]
     
@@ -254,7 +257,7 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
     
     #guardian_df['webPublicationDate'] = guardian_df['webPublicationDate'].apply(lambda x: pd.to_datetime(x))
     
-    return get_articles(guardian_df["webUrl"]), guardian_df
+    return get_articles(guardian_df["webUrl"])
 
 
 """
@@ -262,19 +265,35 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
 """
 
 
-def news_loader(from_date, topic_list):
+def news_loader(from_date, keywords):
     
-    topic = " AND ".join(topic_list)                                                    
+    topic = " AND ".join(keywords)                                                    
     
     # get current date
     to_date = date.today().strftime("%Y-%m-%d")
     
     # call different loaders; Wikipedia not included
     # to_date could be added to NewsAPI_loader
-    news_api_query = NewsAPI_loader(from_date, topic)   # to_date is automatically the current date; from_date is never older than one month before current date (according to NewsAPI free plan)
-    guardian_query, guardian_query_df = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
+    # to_date is automatically the current date; from_date is never older than one month before current date (according to NewsAPI free plan)
+    #news_api_query = NewsAPI_loader(from_date, topic)   
+    #wikipedia_query = wikipedia_loader(" ".join(keywords))
+    #guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     
-    return news_api_query, guardian_query, guardian_query_df
+    loader = []
+    try: news_api_query = NewsAPI_loader(from_date, topic)
+    except: pass
+    else: loader += news_api_query,
+     
+    # TODO error with some ID'S
+    #try: wikipedia_query = wikipedia_loader(keywords)
+    #except: pass
+    #else: loader += wikipedia_query,
+    
+    try: guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
+    except: pass
+    else: loader += guardian_query,
+        
+    return loader
 
 
 

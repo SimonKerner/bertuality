@@ -360,7 +360,7 @@ simple_results = simple_pred_results(pred_query)
                 MAIN TEST 2 - WP PREDICTION   
 """
 
-"""
+
 # tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-large-uncased-whole-word-masking')
 
@@ -370,12 +370,12 @@ model = BertForMaskedLM.from_pretrained('bert-large-uncased-whole-word-masking')
 # 1. Alle Tokens sind unter BERT bekannt
 
 # load dataset with known gold token
-actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
+#actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
 # create sample and learn new token from sample
 #sample = ["Tim Cook is the CEO of [MASK].", "Apple"]
 #sample2 = ["Andy Jassy is the current CEO of [MASK].", "Amazon"]
-sample3 = ["Daniel Zhang is the CEO of [MASK].", "Alibaba"]
+sample3 = "Daniel Zhang is the CEO of [MASK]."
 
 # create key words
 key_words = pos_keywords(sample3)
@@ -390,8 +390,8 @@ key_words = pos_keywords(sample3)
 # 4. Test mit unserem Verfahren um BERT "umzustimmen" und dem Model das richtige Ergebnis beizubringen
 
 # load news from guardian and news_api
-news_api_query, guardian_query, guardian_query_df = news_loader('2022-10-05', key_words)
-split_query = nltk_sentence_split(news_api_query, guardian_query)
+loader_query = news_loader('2022-05-05', key_words)
+split_query = nltk_sentence_split(loader_query)
 merged_query = merge_pages(split_query)
 
 #filter information out of full article list
@@ -400,7 +400,7 @@ extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer
 
 # focus on relevant part of sentence
 focus_query = keyword_focus(extraction_query, key_words, 5)
-
+"""
 # make prediction
 pred_query = make_predictions(sample3[0], focus_query, model, tokenizer)               
 wp_pred_query = word_piece_prediction(sample3[0], focus_query, model, tokenizer, threshold=0.9, max_input=10)     
@@ -408,7 +408,7 @@ wp_pred_query = word_piece_prediction(sample3[0], focus_query, model, tokenizer,
 # fancy results
 simple_results = simple_pred_results(pred_query)                                                
 wp_simple_results = simple_pred_results(wp_pred_query)                                 
-"""
+
 
 
 
@@ -419,7 +419,27 @@ model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-act = automatic_dataset_pred(actuality_dataset[23:], "2023-01-01", tokenizer, model, threshold=0.9, max_input=1)
+results = automatic_dataset_pred(actuality_dataset[20:], "2022-04-01", tokenizer, model, threshold=0.9, max_input=5)
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
