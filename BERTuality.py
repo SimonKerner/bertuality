@@ -695,6 +695,38 @@ def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, thres
 
 
 
+def scoring(results):
+    corr_kn = 0
+    corr_or = 0
+    corr_presuaded_or = 0
+    corr_wp = 0
+    corr_persuaded_wp = 0
+    num_query_empty = 0
+    
+    for i in results:
+        if ('06_Prediction' not in i):
+            if (i['08_kn_word'] == i['04_Gold']):
+                corr_kn += 1
+            if (i['12_or_word'] == i['04_Gold']):
+                corr_or += 1
+            if (i['16_wp_word'] == i['04_Gold']):
+                corr_wp += 1
+            if (i['12_or_word'] == i['04_Gold'] and i['12_or_word'] != i['08_kn_word']):
+                corr_presuaded_or += 1
+            if (i['16_wp_word'] == i['04_Gold'] and i['16_wp_word'] != i['08_kn_word']):
+                corr_persuaded_wp += 1
+                
+        else:
+            num_query_empty += 1
+                
+    print(corr_kn)
+    print(corr_or)
+    print(corr_presuaded_or)
+    print(corr_wp)
+    print(corr_persuaded_wp)
+    print(num_query_empty)
+    
+  
 
 
 
