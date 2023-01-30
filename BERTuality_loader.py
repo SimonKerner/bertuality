@@ -27,7 +27,6 @@ def text_clean_up(str_text):
     
     prep = re.sub(r'\([^)]*\)', r"", prep)           # delete (asdf) in parenthesis 
     prep = re.sub(r'\[[^]]*\]', r"", prep)           # delete [asdf] in brackets
-    prep = re.sub(r'\{[^]]*\}', r"", prep)           # delete {asdf}
     prep = re.sub(r'[A-Z]*\b\/[A-Z]+', r"", prep)    # delete GUANGZHOU/TOKYO/BANGKOK
     prep = re.sub(r"#\w*", r"", prep)                # delete hastag
     prep = re.sub(r"(\d)(\,)(\d)", r"\1.\3", prep)   # 12,000 --> 12.000
@@ -56,6 +55,7 @@ def text_clean_up(str_text):
     prep = re.sub(r'\s{2,}', r" ", prep)                           # if two or more whitespace
     
     prep = prep.replace(",.", ". ")
+    prep = prep.replace(" , ", ", ")
     
     prep = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', prep) # yearApple --> year Apple (but not iPhone)
     
@@ -86,11 +86,14 @@ def wikipedia_loader(keywords):
                             + "&srsearch=" + srsearch + "&prop=extracts&srnamespace=0&srinfo=totalhits"
                             + "&srprop=wordcount%7Csnippet&srsort=relevance&srlimit=10")
     json = response.json()
-    
     titles = [i["title"] for i in json["query"]["search"]] 
-    pages = [wikipedia.page(t).content for t in titles]
-    clean_pages = [text_clean_up(i).replace(" ", "_") for i in pages]
     
+    pages = []
+    for t in titles:
+        try: pages += wikipedia.WikipediaPage(title=t).content,
+        except: continue
+    
+    clean_pages = [text_clean_up(i) for i in pages] 
     return clean_pages
       
     
@@ -284,10 +287,9 @@ def news_loader(from_date, keywords):
     except: pass
     else: loader += news_api_query,
      
-    # TODO error with some ID'S
-    #try: wikipedia_query = wikipedia_loader(keywords)
-    #except: pass
-    #else: loader += wikipedia_query,
+    try: wikipedia_query = wikipedia_loader(keywords)
+    except: pass
+    else: loader += wikipedia_query,
     
     try: guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     except: pass

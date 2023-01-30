@@ -70,7 +70,7 @@ def filter_list_final(input_sentences, twod_list, tokenizer):    #twod_list = 2 
     if isinstance(twod_list[0], str):                   # so that the given list can also be one-dimensional!
         result += filter_list(input_sentences, twod_list)
         
-    result = remove_duplicates(result)
+    # result = remove_duplicates(result)
     
     result = remove_too_long_sentences(result, tokenizer)
     
