@@ -72,7 +72,7 @@ def filter_list_final(input_sentences, twod_list, tokenizer):    #twod_list = 2 
     if isinstance(twod_list[0], str):                   # so that the given list can also be one-dimensional!
         result += filter_list(input_sentences, twod_list)
         
-    # result = remove_duplicates(result)
+    #result = remove_duplicates(result)
     
     result = remove_too_long_sentences(result, tokenizer)
     
@@ -82,8 +82,11 @@ def filter_list_final(input_sentences, twod_list, tokenizer):    #twod_list = 2 
 def filter_for_keyword_subsets(input_sentences, keywords, tokenizer, subset_size):
     keyword_subsets = create_subsets(keywords, subset_size)
     
-    return filter_list_final(input_sentences, keyword_subsets, tokenizer)
+    extraction = filter_list_final(input_sentences, keyword_subsets, tokenizer)
     
+    extraction_sorted = [item for items, c in Counter(extraction).most_common() for item in [items] * c]
+    
+    return extraction_sorted
     
 def remove_too_long_sentences(input_sentences, tokenizer):
     short_input_sentences = []
@@ -183,9 +186,6 @@ def keyword_focus(input_sentences, key_words, padding=0):
         
         filtered_input.append(focus_input)
     
-    filtered_input.sort(key=len, reverse=True)
-    filtered_input = [item for items, c in Counter(filtered_input).most_common() for item in [items] * c]
-    
     return filtered_input
 
 
@@ -242,8 +242,11 @@ def pos_keywords(sample):
     
     # filter word "Inc", because not important for meaning of the sentence!
     key_pos_tags = [x for x in key_pos_tags if x[0] != "Inc" and x[0] != "Inc."]
+    key_pos_tags = [x for x in key_pos_tags if x[0] != "profession" ]
+    key_pos_tags = [x for x in key_pos_tags if x[0] != "leader" ]
     # filter word "profession", because not important for the meaning and makes data quality worse
     key_pos_tags = [x for x in key_pos_tags if x[0] != "profession"]
+
     
     # if key_pos_tags_filtered contains more than 4 keywords, remove some!
     if len(key_pos_tags) > 4:
@@ -485,8 +488,9 @@ def word_piece_prediction(sample, input_sentences, model, tokenizer, max_input=0
     # find whole word pieces
     if max_input != 0: input_sentences = input_sentences[:max_input]
     
-    print("Sentence:", sample)
-    print("Input Size:", len(input_sentences))
+    print("    Starting WordPiece Prediction:")
+    print("    Sentence:", sample)
+    print("    Input Size:", len(input_sentences))
     
     #output storage
     wp_results = pd.DataFrame(columns=["masked", "input", "input + masked", "token1", "score1"])
@@ -556,9 +560,9 @@ def word_piece_prediction(sample, input_sentences, model, tokenizer, max_input=0
         
         # status prints
         status+=1
-        print("Progress -->", round(status/sen_size*100, 2), "%")
+        print("    Progress -->", round(status/sen_size*100, 2), "%")
     end_time = time.perf_counter()
-    print(f"Performance: {end_time - start_time:0.4f} seconds")
+    print(f"    Performance: {end_time - start_time:0.4f} seconds")
           
     #return list of sentences with  --> return predicted sentences from focus
     return wp_results
@@ -683,7 +687,7 @@ def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, subse
                    "08_kn_word": kn_simple_results["Token"][0],
                    "09_kn_score": kn_simple_results["sum_up_score"][0],
                    
-                   "10_or_pred_query": kn_pred_query,
+                   "10_or_pred_query": or_pred_query,
                    "11_or_simple_results": or_simple_results,
                    "12_or_word": or_simple_results["Token"][0],
                    "13_or_score": or_simple_results["sum_up_score"][0],
