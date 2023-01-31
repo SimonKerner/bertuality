@@ -295,15 +295,16 @@ model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-results = automatic_dataset_pred(actuality_dataset[9:10], 
+results = automatic_dataset_pred(actuality_dataset, 
                                  "2022-01-01", 
                                  tokenizer, 
                                  model, 
                                  subset_size=2, 
-                                 word_padding=6, 
+                                 word_padding=6,
                                  threshold=0.9, 
                                  max_input=25)
 
+scoring = scoring(results)
 
 
 
