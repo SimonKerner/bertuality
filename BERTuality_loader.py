@@ -45,7 +45,7 @@ def text_clean_up(str_text):
     prep = prep.replace(r"%", r" % ")       
     prep = prep.replace("!", ".")
     prep = prep.replace("?", ".")
-    prep = re.sub(r"[—<>|®•:“”\"+;=]", r"", prep)            
+    prep = re.sub(r"[—<>|®•:“”\"+;=–]", r"", prep)            
 
     #line replacements
     prep = re.sub(r"\r?\s+\n+|\r", r".", prep)                     # delete line break
@@ -78,25 +78,25 @@ def text_clean_up(str_text):
 """
 
 
-def wikipedia_loader(keywords):
+def wikipedia_loader(keywords, num_pages=1):
     keywords = [i[0].upper() + i[1:] for i in keywords]
     srsearch = " ".join(keywords)
     
     response = requests.get("https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&formatversion=2"
                             + "&srsearch=" + srsearch + "&prop=extracts&srnamespace=0&srinfo=totalhits"
-                            + "&srprop=wordcount%7Csnippet&srsort=relevance&srlimit=10")
+                            + "&srprop=wordcount%7Csnippet&srsort=relevance&srlimit=" + str(num_pages))
     json = response.json()
     titles = [i["title"] for i in json["query"]["search"]] 
     
     pages = []
     for t in titles:
-        try: pages += wikipedia.WikipediaPage(title=t).content,
+        try: pages += wikipedia.WikipediaPage(title=t).summary,
         except: continue
     
     clean_pages = [text_clean_up(i) for i in pages] 
     return clean_pages
-      
     
+
 def NewsAPI_loader(from_param, topic):           
     """
         topic: Advanced search is supported here:
@@ -283,9 +283,9 @@ def news_loader(from_date, keywords):
     #guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     
     loader = []
-    try: news_api_query = NewsAPI_loader(from_date, topic)
-    except: pass
-    else: loader += news_api_query,
+    #try: news_api_query = NewsAPI_loader(from_date, topic)
+    #except: pass
+    #else: loader += news_api_query,
      
     try: wikipedia_query = wikipedia_loader(keywords)
     except: pass
