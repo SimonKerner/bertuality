@@ -283,17 +283,17 @@ def news_loader(from_date, keywords):
     #guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     
     loader = []
-    #try: news_api_query = NewsAPI_loader(from_date, topic)
-    #except: pass
-    #else: loader += news_api_query,
-     
-    try: wikipedia_query = wikipedia_loader(keywords)
+    try: news_api_query = NewsAPI_loader(from_date, topic)
     except: pass
-    else: loader += wikipedia_query,
+    else: loader += news_api_query,
     
     try: guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     except: pass
     else: loader += guardian_query,
+    
+    try: wikipedia_query = wikipedia_loader(keywords)
+    except: pass
+    else: loader += wikipedia_query,
         
     return loader
 

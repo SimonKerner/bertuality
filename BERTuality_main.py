@@ -295,7 +295,7 @@ model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-results = automatic_dataset_pred(actuality_dataset[0] + actuality_dataset[5:14], 
+results = automatic_dataset_pred(actuality_dataset[9:10], 
                                  "2022-01-01", 
                                  tokenizer, 
                                  model, 
@@ -303,7 +303,6 @@ results = automatic_dataset_pred(actuality_dataset[0] + actuality_dataset[5:14],
                                  word_padding=6, 
                                  threshold=0.9, 
                                  max_input=40)
-
 
 
 
