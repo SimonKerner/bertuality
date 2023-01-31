@@ -18,7 +18,7 @@ from BERTuality import filter_for_keyword_subsets
 from BERTuality import word_piece_prediction
 from BERTuality import query_pipeline
 from BERTuality import automatic_dataset_pred
-
+from BERTuality import scoring
 # tokenizer
 #tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 
@@ -304,7 +304,7 @@ results = automatic_dataset_pred(actuality_dataset[:],
                                  threshold=0.9, 
                                  max_input=25)
 
-
+scoring = scoring(results)
 
 
 

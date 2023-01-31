@@ -8,6 +8,7 @@ import itertools
 import collections
 from collections import Counter
 from BERTuality_loader import news_loader
+import math
 
 """
     Data Preparation
@@ -702,15 +703,18 @@ def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, subse
     return results
 
 
-
+# create a dataFrame with all the important scores and informations about the tests
 def scoring(results):
+    # initialize scores
     corr_kn = 0
     corr_or = 0
-    corr_presuaded_or = 0
+    corr_persuaded_or = 0
     corr_wp = 0
     corr_persuaded_wp = 0
     num_query_empty = 0
+    num_of_tests = len(results)
     
+    # calculate scores
     for i in results:
         if ('06_Prediction' not in i):
             if (i['08_kn_word'] == i['04_Gold']):
@@ -720,19 +724,37 @@ def scoring(results):
             if (i['16_wp_word'] == i['04_Gold']):
                 corr_wp += 1
             if (i['12_or_word'] == i['04_Gold'] and i['12_or_word'] != i['08_kn_word']):
-                corr_presuaded_or += 1
+                corr_persuaded_or += 1
             if (i['16_wp_word'] == i['04_Gold'] and i['16_wp_word'] != i['08_kn_word']):
                 corr_persuaded_wp += 1
-                
         else:
             num_query_empty += 1
+      
+    # calculate average scores        
+    avg_corr_kn = round(corr_kn / num_of_tests, 3)
+    avg_corr_or = round(corr_or / num_of_tests, 3)
+    avg_corr_persuaded_or = round(corr_persuaded_or / num_of_tests, 3)
+    avg_corr_wp = round(corr_wp / num_of_tests, 3)
+    avg_corr_persuaded_wp = round(corr_persuaded_wp /num_of_tests, 3)
+    
+    # create df
+    columns = ["avg", "avg_pers", "#tests", "#empty"]
+    rows = ["knowledge", "original", "word-peice"]
+    results = pd.DataFrame(index = rows, columns = columns)
+    
+    #fill df
+    avg_corr_values = [avg_corr_kn, avg_corr_or, avg_corr_wp]
+    avg_corr_persuaded_values = [0, avg_corr_persuaded_or, avg_corr_persuaded_wp]
+    num_query_empty_value = [num_query_empty, "/", "/"]
+    num_of_tests_value = [num_of_tests, "/", "/"]
+    
+    results["avg"] = avg_corr_values
+    results["avg_pers"] = avg_corr_persuaded_values
+    results["#empty"] = num_query_empty_value
+    results["#tests"] = num_of_tests_value
+    
+    return results
                 
-    print(corr_kn)
-    print(corr_or)
-    print(corr_presuaded_or)
-    print(corr_wp)
-    print(corr_persuaded_wp)
-    print(num_query_empty)
     
   
 
