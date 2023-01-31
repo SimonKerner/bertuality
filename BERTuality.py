@@ -241,6 +241,8 @@ def pos_keywords(sample):
     
     # filter word "Inc", because not important for meaning of the sentence!
     key_pos_tags = [x for x in key_pos_tags if x[0] != "Inc" and x[0] != "Inc."]
+    # filter word "profession", because not important for the meaning and makes data quality worse
+    key_pos_tags = [x for x in key_pos_tags if x[0] != "profession"]
     
     # if key_pos_tags_filtered contains more than 4 keywords, remove some!
     if len(key_pos_tags) > 4:
