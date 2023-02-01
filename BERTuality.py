@@ -666,7 +666,8 @@ def load_actuality_dataset(tokenizer, delete_unknown_token = False):
     return actuality_dataset
 
 
-
+# TODO if changes to predicitons
+# HERE: 07_focus_query --> 0x_...
 def automatic_dataset_pred(actuality_dataset, from_date, to_date, tokenizer, model, subset_size=2, sim_score=0, word_padding=0, threshold=None, max_input=None, query_test=False, use_NewsAPI=True):
     
     actuality_dataset = actuality_dataset.reset_index(drop=True)
