@@ -74,7 +74,7 @@ def filter_list_final(input_sentences, twod_list, tokenizer):    #twod_list = 2 
     if isinstance(twod_list[0], str):                   # so that the given list can also be one-dimensional!
         result += filter_list(input_sentences, twod_list)
         
-    #result = remove_duplicates(result)
+    result = remove_duplicates(result)
     
     result = remove_too_long_sentences(result, tokenizer)
     
@@ -253,7 +253,7 @@ def pos_keywords(sample):
     sent = sample.replace("[MASK]", "")
     
     # create acronyms for better keyword creation
-    sent = sample.replace("chief executive officer", "CEO")
+    sent = sent.replace("chief executive officer", "CEO")
     
     # create token and pos-tags
     token = nltk.word_tokenize(sent)
@@ -393,7 +393,7 @@ def simple_pred_results(pred_query):
     results["mean_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].mean())
     results["sum_up_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].sum())
     results["?new_ranking?"] = results.index.map(((results.max_score - results.min_score) * results.mean_score)/(results.max_score - results.min_score))
-    results = results.sort_values(by=["?new_ranking?"], ascending=False, ignore_index=True) # was sum_up_score
+    results = results.sort_values(by=["sum_up_score"], ascending=False, ignore_index=True) # was sum_up_score
     return results
 
 
@@ -738,9 +738,7 @@ def automatic_dataset_pred(actuality_dataset, from_date, to_date, tokenizer, mod
     print("Predictions on:", round((len(results) - len(error))/len(results)*100, 2), "% of Dataset")
     print("No Predictions for Index:", error)
     
-    score = scoring(results)
-    
-    return results, score
+    return results
 
 
 # create a dataFrame with all the important scores and informations about the tests

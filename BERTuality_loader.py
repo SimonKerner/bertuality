@@ -32,6 +32,9 @@ def text_clean_up(str_text):
     prep = re.sub(r"(\d)(\,)(\d)", r"\1.\3", prep)   # 12,000 --> 12.000
     prep = re.sub(r'([A-Z])s', r'\1', prep)        # delete CEOs --> CEO
     
+    #TODO
+    prep = prep.replace(",", " ")
+    
     # special deletions -contractions
     prep = re.sub(r"[’']s", r"", prep)              # delete apostroph s
     prep = re.sub(r"[’']d", r"", prep)
@@ -55,7 +58,7 @@ def text_clean_up(str_text):
     prep = re.sub(r'\s{2,}', r" ", prep)                           # if two or more whitespace
     
     prep = prep.replace(",.", ". ")
-    prep = prep.replace(" , ", ", ")
+    #prep = prep.replace(" , ", ", ")
     
     prep = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', prep) # yearApple --> year Apple (but not iPhone)
     

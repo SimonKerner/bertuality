@@ -293,19 +293,19 @@ wp_simple_results = simple_pred_results(wp_pred_query)
 
 
 # tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 # model: BERT pre-trained
-model = BertForMaskedLM.from_pretrained('bert-large-uncased')
+model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 # dataset
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-results, scoring = automatic_dataset_pred(actuality_dataset[:], 
-                                 "2022-01-01",          #from_date
+results = automatic_dataset_pred(actuality_dataset[9:10], 
+                                 "2022-08-01",          #from_date
                                  "2023-01-30",          #to_date
                                  tokenizer, 
                                  model, 
                                  subset_size=2,
-                                 sim_score=0.4,         # new score to tune sentence input
+                                 sim_score=0.3,         # new score to tune sentence input
                                  word_padding=6,        
                                  threshold=0.9,         
                                  max_input=50,          # set max input 0 to get everything
