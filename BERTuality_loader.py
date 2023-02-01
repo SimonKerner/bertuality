@@ -97,7 +97,7 @@ def wikipedia_loader(keywords, num_pages=1):
     return clean_pages
     
 
-def NewsAPI_loader(from_param, topic):           
+def NewsAPI_loader(from_param, to, topic):           
     """
         topic: Advanced search is supported here:
         Surround phrases with quotes (") for exact match.
@@ -114,7 +114,7 @@ def NewsAPI_loader(from_param, topic):
         from_param = (str(date.today() - relativedelta(months = 1)))
     
     # get overview
-    overview = newsapi.get_everything(q=topic, from_param=from_param, language='en', sort_by='relevancy')
+    overview = newsapi.get_everything(q=topic, from_param=from_param, to=to, language='en', sort_by='relevancy')
     
     # get all articles
     all_articles = overview['articles']
@@ -268,12 +268,12 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
 """
 
 
-def news_loader(from_date, keywords):
+def news_loader(from_date, to_date, keywords):
     
     topic = " AND ".join(keywords)                                                    
     
     # get current date
-    to_date = date.today().strftime("%Y-%m-%d")
+    #to_date = date.today().strftime("%Y-%m-%d")
     
     # call different loaders; Wikipedia not included
     # to_date could be added to NewsAPI_loader
@@ -283,7 +283,7 @@ def news_loader(from_date, keywords):
     #guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     
     loader = []
-    try: news_api_query = NewsAPI_loader(from_date, topic)
+    try: news_api_query = NewsAPI_loader(from_date, to_date, topic)
     except: pass
     else: loader += news_api_query,
     

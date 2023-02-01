@@ -356,11 +356,11 @@ def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_inp
 
 # TODO
 # main query for input data --> returns dict, but changeable to whatever
-def query_pipeline(sample, from_date, tokenizer, subset_size, sim_score, word_padding):
+def query_pipeline(sample, from_date, to_date, tokenizer, subset_size, sim_score, word_padding):
     
     key_words = pos_keywords(sample)
     
-    loader_query = news_loader(from_date, key_words)
+    loader_query = news_loader(from_date, to_date, key_words)
     split_query = nltk_sentence_split(loader_query)
     merged_query = merge_pages(split_query)
     extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, subset_size)
@@ -665,7 +665,7 @@ def load_actuality_dataset(tokenizer, delete_unknown_token = False):
 
 
 
-def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, subset_size=2, sim_score=0, word_padding=0, threshold=None, max_input=None, query_test=False):
+def automatic_dataset_pred(actuality_dataset, from_date, to_date, tokenizer, model, subset_size=2, sim_score=0, word_padding=0, threshold=None, max_input=None, query_test=False):
     
     actuality_dataset = actuality_dataset.reset_index(drop=True)
     
@@ -675,7 +675,7 @@ def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, subse
         
         print(f"\nDataset Prediction Progress [{index+1}/{len(actuality_dataset)}]")
         
-        query = query_pipeline(actuality_dataset["MaskSatz"][index], from_date, tokenizer, subset_size=subset_size, sim_score=0.4, word_padding=word_padding)
+        query = query_pipeline(actuality_dataset["MaskSatz"][index], from_date, to_date, tokenizer, subset_size=subset_size, sim_score=0.4, word_padding=word_padding)
         
         # For testing the query
         if query_test == True: 

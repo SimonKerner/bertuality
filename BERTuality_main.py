@@ -300,8 +300,9 @@ model = BertForMaskedLM.from_pretrained('bert-large-uncased')
 
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-results = automatic_dataset_pred(actuality_dataset[:], 
+results = automatic_dataset_pred(actuality_dataset[25:], 
                                  "2022-01-01", 
+                                 "2023-01-30",
                                  tokenizer, 
                                  model, 
                                  subset_size=2,
@@ -312,7 +313,16 @@ results = automatic_dataset_pred(actuality_dataset[:],
                                  query_test=False)      # set True to only get Query Pipeline without Predictions
 
 scoring = scoring(results)
-        
+
+
+
+"""
+sample_1 = ["Daniel Zhang is the chief executive officer of [MASK] group.", "Alibaba"]
+input_sentence_1 = "Daniel Zhang is the chief executive officer of Alibaba group."
+
+
+a = word_piece_prediction(sample_1[0], input_sentence_1, model, tokenizer, threshold=0.9, max_input=5)  
+"""      
         
 
 
