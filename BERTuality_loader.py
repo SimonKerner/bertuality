@@ -14,7 +14,7 @@ from dateutil.relativedelta import relativedelta
 """
 
 def text_clean_up(str_text):
-    prep = re.sub(r'<[^>]*>', r"", str_text)                      # delete html tags
+    prep = re.sub(r'<[^>]*>', r"", str_text)                     # delete html tags
     prep = re.sub(r'<!--.*', r"", prep)                          # also html tag
     prep = re.sub(r'&(?:[a-z\d]+|#\d+|#x[a-f\d]+);', r"", prep)  # delete html special enteties
     
@@ -32,7 +32,6 @@ def text_clean_up(str_text):
     prep = re.sub(r"(\d)(\,)(\d)", r"\1.\3", prep)   # 12,000 --> 12.000
     prep = re.sub(r'([A-Z])s', r'\1', prep)        # delete CEOs --> CEO
     
-    #TODO
     prep = prep.replace(",", " ")
     
     # special deletions -contractions
