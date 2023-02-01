@@ -268,7 +268,7 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
 """
 
 
-def news_loader(from_date, to_date, keywords):
+def news_loader(from_date, to_date, keywords, use_NewsAPI = True):
     
     topic = " AND ".join(keywords)                                                    
     
@@ -283,9 +283,10 @@ def news_loader(from_date, to_date, keywords):
     #guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     
     loader = []
-    try: news_api_query = NewsAPI_loader(from_date, to_date, topic)
-    except: pass
-    else: loader += news_api_query,
+    if use_NewsAPI:
+        try: news_api_query = NewsAPI_loader(from_date, to_date, topic)
+        except: pass
+        else: loader += news_api_query,
     
     try: guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
     except: pass

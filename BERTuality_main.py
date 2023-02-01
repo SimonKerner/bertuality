@@ -310,7 +310,8 @@ results = automatic_dataset_pred(actuality_dataset[25:],
                                  word_padding=6,        
                                  threshold=0.9,         
                                  max_input=50,          # set max input 0 to get everything
-                                 query_test=False)      # set True to only get Query Pipeline without Predictions
+                                 query_test=False,
+                                 use_NewsAPI=False)      # set True to only get Query Pipeline without Predictions
 
 scoring = scoring(results)
 
