@@ -295,8 +295,8 @@ model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-results = automatic_dataset_pred(actuality_dataset, 
-                                 "2022-01-01", 
+results_1 = automatic_dataset_pred(actuality_dataset, 
+                                 "2022-05-01", 
                                  tokenizer, 
                                  model, 
                                  subset_size=2, 
@@ -304,7 +304,51 @@ results = automatic_dataset_pred(actuality_dataset,
                                  threshold=0.9, 
                                  max_input=25)
 
-scoring = scoring(results)
+scoring_1 = scoring(results_1)
+
+results_2 = automatic_dataset_pred(actuality_dataset, 
+                                 "2022-05-01", 
+                                 tokenizer, 
+                                 model, 
+                                 subset_size=3, 
+                                 word_padding=6,
+                                 threshold=0.9, 
+                                 max_input=25)
+
+scoring_2 = scoring(results_1)
+
+results_3 = automatic_dataset_pred(actuality_dataset, 
+                                 "2022-05-01", 
+                                 tokenizer, 
+                                 model, 
+                                 subset_size=4, 
+                                 word_padding=6,
+                                 threshold=0.9, 
+                                 max_input=25)
+
+scoring_3 = scoring(results_1)
+
+results_4 = automatic_dataset_pred(actuality_dataset, 
+                                 "2022-05-01", 
+                                 tokenizer, 
+                                 model, 
+                                 subset_size=2, 
+                                 word_padding=9,
+                                 threshold=0.9, 
+                                 max_input=25)
+
+scoring_4 = scoring(results_1)
+
+results_5 = automatic_dataset_pred(actuality_dataset, 
+                                 "2022-05-01", 
+                                 tokenizer, 
+                                 model, 
+                                 subset_size=2, 
+                                 word_padding=3,
+                                 threshold=0.9, 
+                                 max_input=25)
+
+scoring_5 = scoring(results_1)
 
 
 
