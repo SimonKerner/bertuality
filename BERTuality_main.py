@@ -288,72 +288,30 @@ wp_simple_results = simple_pred_results(wp_pred_query)
 """
 
 
+
+
+
+
 # tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 # model: BERT pre-trained
-model = BertForMaskedLM.from_pretrained('bert-base-uncased')
+
+model = BertForMaskedLM.from_pretrained('bert-large-uncased')
 
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-results_1 = automatic_dataset_pred(actuality_dataset, 
-                                 "2022-05-01", 
+results = automatic_dataset_pred(actuality_dataset[:], 
+                                 "2022-01-01", 
                                  tokenizer, 
                                  model, 
-                                 subset_size=2, 
-                                 word_padding=6,
-                                 threshold=0.9, 
-                                 max_input=25)
+                                 subset_size=2,
+                                 sim_score=0.4,         # new score to tune sentence input
+                                 word_padding=6,        
+                                 threshold=0.9,         
+                                 max_input=50,          # set max input 0 to get everything
+                                 query_test=False)      # set True to only get Query Pipeline without Predictions
 
-scoring_1 = scoring(results_1)
-
-results_2 = automatic_dataset_pred(actuality_dataset, 
-                                 "2022-05-01", 
-                                 tokenizer, 
-                                 model, 
-                                 subset_size=3, 
-                                 word_padding=6,
-                                 threshold=0.9, 
-                                 max_input=25)
-
-scoring_2 = scoring(results_1)
-
-results_3 = automatic_dataset_pred(actuality_dataset, 
-                                 "2022-05-01", 
-                                 tokenizer, 
-                                 model, 
-                                 subset_size=4, 
-                                 word_padding=6,
-                                 threshold=0.9, 
-                                 max_input=25)
-
-scoring_3 = scoring(results_1)
-
-results_4 = automatic_dataset_pred(actuality_dataset, 
-                                 "2022-05-01", 
-                                 tokenizer, 
-                                 model, 
-                                 subset_size=2, 
-                                 word_padding=9,
-                                 threshold=0.9, 
-                                 max_input=25)
-
-scoring_4 = scoring(results_1)
-
-results_5 = automatic_dataset_pred(actuality_dataset, 
-                                 "2022-05-01", 
-                                 tokenizer, 
-                                 model, 
-                                 subset_size=2, 
-                                 word_padding=3,
-                                 threshold=0.9, 
-                                 max_input=25)
-
-scoring_5 = scoring(results_1)
-
-
-
-
-
+scoring = scoring(results)
         
         
 
