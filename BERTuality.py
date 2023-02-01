@@ -1,14 +1,16 @@
 from transformers import BertTokenizer, BertForMaskedLM, pipeline
 from transformers import AutoTokenizer, AutoModelForTokenClassification
+from sentence_transformers import SentenceTransformer, util
 import pandas as pd
 import re
 import nltk
 from nltk import tokenize
 import itertools
 import collections
+import time
 from collections import Counter
 from BERTuality_loader import news_loader
-import math
+
 
 """
     Data Preparation
@@ -125,6 +127,31 @@ def merge_pages(filtered_pages):
     #remove_too_long_sentences(merged, tokenizer)
     
     return merged
+
+
+# used to extract better sentences out of other querys --> score depends on similarity of sentence to mask_sentence
+def similarity_filter(mask_sentence, query, sim_score=0, return_tuples=False):
+    
+    if sim_score == 0: return query
+    if len(query) == 0: return query
+    
+    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    
+    #Compute embedding for both lists
+    embedding_1 = model.encode([mask_sentence], convert_to_tensor=True)
+    embedding_2 = model.encode(query, convert_to_tensor=True)
+    
+    if return_tuples==False:
+        # calculate cos_sim score and return tuple with testet sentence
+        cos_sim = [(util.pytorch_cos_sim(embedding_1[0], embedding_2[i]), query[i]) for i in range(len(embedding_2))]
+        
+        # delete [1] to get tuple with score and sentence --> returnes sentence if higher than sim_score
+        results = [cos_sim[i][1] for i in range(len(cos_sim)) if float(cos_sim[i][0]) >= sim_score]
+    else:
+        cos_sim = [(float(util.pytorch_cos_sim(embedding_1[0], embedding_2[i])), query[i]) for i in range(len(embedding_2))]
+        results = [cos_sim[i] for i in range(len(cos_sim)) if float(cos_sim[i][0]) >= sim_score]
+    
+    return results
 
 
 def keyword_focus(input_sentences, key_words, padding=0):
@@ -244,9 +271,6 @@ def pos_keywords(sample):
     key_pos_tags = [x for x in key_pos_tags if x[0] != "Inc" and x[0] != "Inc."]
     key_pos_tags = [x for x in key_pos_tags if x[0] != "profession" ]
     key_pos_tags = [x for x in key_pos_tags if x[0] != "leader" ]
-    # filter word "profession", because not important for the meaning and makes data quality worse
-    key_pos_tags = [x for x in key_pos_tags if x[0] != "profession"]
-
     
     # if key_pos_tags_filtered contains more than 4 keywords, remove some!
     if len(key_pos_tags) > 4:
@@ -280,10 +304,10 @@ def pos_keywords(sample):
 
 
 # make predictions
-def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_input=0):
+def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_input=None):
     
     if len(input_sentences) == 0: return
-    if max_input != 0: input_sentences = input_sentences[:max_input]
+    if max_input != None: input_sentences = input_sentences[:max_input]
     
     # pipeline pre-trained
     fill_mask_pipeline_pre = pipeline("fill-mask", model=model, tokenizer=tokenizer)
@@ -330,25 +354,26 @@ def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_inp
     return pred
 
 
+# TODO
 # main query for input data --> returns dict, but changeable to whatever
-def query_pipeline(sample, from_date, tokenizer, subset_size=2, word_padding=5):
+def query_pipeline(sample, from_date, tokenizer, subset_size, sim_score, word_padding):
     
     key_words = pos_keywords(sample)
-    #news_api_query, guardian_query, guardian_query_df = news_loader(from_date, key_words)
-    loader_query = news_loader(from_date, key_words)
     
-    #split_query = nltk_sentence_split(news_api_query, guardian_query)
+    loader_query = news_loader(from_date, key_words)
     split_query = nltk_sentence_split(loader_query)
     merged_query = merge_pages(split_query)
     extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, subset_size)
-    focus_query = keyword_focus(extraction_query, key_words, word_padding)
+    similarity_query = similarity_filter(sample, extraction_query, sim_score)
+    focus_query = keyword_focus(similarity_query, key_words, word_padding)
     
     query_dict = {"01_sample": sample,
                   "02_keywords": key_words,
                   "03_split_query": split_query,
                   "04_merged_query": merged_query,
                   "05_extraction_query": extraction_query,
-                  "06_focus_query": focus_query}
+                  "06_similarity_query": similarity_query,
+                  "07_focus_query": focus_query}              
     
     return query_dict
 
@@ -358,14 +383,15 @@ def simple_pred_results(pred_query):
     if pred_query is None:
         return 
     
-    results = pd.DataFrame(columns=["Token", "Frequency", "max_score", "min_score", "mean_score", "sum_up_score"])
+    results = pd.DataFrame(columns=["Token", "Frequency", "max_score", "min_score", "mean_score", "sum_up_score", "?new_ranking?"])
     results["Token"] = pred_query["token1"].unique()
     results["Frequency"] = results["Token"].map(pred_query["token1"].value_counts())
     results["max_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].max())
     results["min_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].min())
     results["mean_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].mean())
     results["sum_up_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].sum())
-    results = results.sort_values(by=["sum_up_score"], ascending=False, ignore_index=True)
+    results["?new_ranking?"] = results.index.map(((results.max_score - results.min_score) * results.mean_score)/(results.max_score - results.min_score))
+    results = results.sort_values(by=["?new_ranking?"], ascending=False, ignore_index=True) # was sum_up_score
     return results
 
 
@@ -480,7 +506,7 @@ def word_piece_temp_df_pred(mask_sentence, tokens, wp_position, model, tokenizer
                              'score1': piece_pred["score1"].mean()}])
     return temp_df
 
-import time
+
 def word_piece_prediction(sample, input_sentences, model, tokenizer, max_input=0, combine=True, threshold=None):
     start_time = time.perf_counter()
     # find index of ali ##ba ##ba
@@ -638,7 +664,8 @@ def load_actuality_dataset(tokenizer, delete_unknown_token = False):
     return actuality_dataset
 
 
-def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, subset_size=2, word_padding=5, threshold=0.9, max_input=20):
+
+def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, subset_size=2, sim_score=0, word_padding=0, threshold=None, max_input=None, query_test=False):
     
     actuality_dataset = actuality_dataset.reset_index(drop=True)
     
@@ -648,10 +675,15 @@ def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, subse
         
         print(f"\nDataset Prediction Progress [{index+1}/{len(actuality_dataset)}]")
         
-        query = query_pipeline(actuality_dataset["MaskSatz"][index], from_date, tokenizer, subset_size=subset_size, word_padding=word_padding)
+        query = query_pipeline(actuality_dataset["MaskSatz"][index], from_date, tokenizer, subset_size=subset_size, sim_score=0.4, word_padding=word_padding)
+        
+        # For testing the query
+        if query_test == True: 
+            results += query, 
+            continue
         
         # safety mech
-        if len(query["06_focus_query"])==0: 
+        if len(query["07_focus_query"])==0: 
             samp_results = {"01_Nummer": actuality_dataset["Nummer"][index],
                    "02_MaskSatz": actuality_dataset["MaskSatz"][index],
                    "03_Original": actuality_dataset["Original"][index],
@@ -667,11 +699,11 @@ def automatic_dataset_pred(actuality_dataset, from_date, tokenizer, model, subse
         kn_simple_results = simple_pred_results(kn_pred_query)
         
         # Test Original BERT with input
-        or_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], query["06_focus_query"], model, tokenizer, max_input=max_input)              
+        or_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], query["07_focus_query"], model, tokenizer, max_input=max_input)              
         or_simple_results = simple_pred_results(or_pred_query)  
         
         # Test full Word Piece Prediction
-        wp_pred_query = word_piece_prediction(actuality_dataset["MaskSatz"][index], query["06_focus_query"], model, tokenizer, 
+        wp_pred_query = word_piece_prediction(actuality_dataset["MaskSatz"][index], query["07_focus_query"], model, tokenizer, 
                                               threshold=threshold, max_input=max_input)              
         wp_simple_results = simple_pred_results(wp_pred_query)                                  
         
