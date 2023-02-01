@@ -736,7 +736,9 @@ def automatic_dataset_pred(actuality_dataset, from_date, to_date, tokenizer, mod
     print("Predictions on:", round((len(results) - len(error))/len(results)*100, 2), "% of Dataset")
     print("No Predictions for Index:", error)
     
-    return results
+    score = scoring(results)
+    
+    return results, score
 
 
 # create a dataFrame with all the important scores and informations about the tests

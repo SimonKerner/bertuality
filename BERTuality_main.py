@@ -299,7 +299,7 @@ model = BertForMaskedLM.from_pretrained('bert-large-uncased')
 # dataset
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-results = automatic_dataset_pred(actuality_dataset[25:], 
+results, scoring = automatic_dataset_pred(actuality_dataset[:], 
                                  "2022-01-01",          #from_date
                                  "2023-01-30",          #to_date
                                  tokenizer, 
@@ -311,9 +311,6 @@ results = automatic_dataset_pred(actuality_dataset[25:],
                                  max_input=50,          # set max input 0 to get everything
                                  query_test=False,      # set True to only get Query Pipeline without Predictions
                                  use_NewsAPI=False)     # do not use NewsAPI for tests because of restriction to 100 uses   
-
-scoring = scoring(results)
-
 
 
 """
