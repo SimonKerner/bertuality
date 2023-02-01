@@ -299,7 +299,9 @@ model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 # dataset
 actuality_dataset = load_actuality_dataset(tokenizer, delete_unknown_token=False)
 
-results = automatic_dataset_pred(actuality_dataset[9:10], 
+# query order: normal (focus query = input)
+# include remove duplicates as default
+results = automatic_dataset_pred(actuality_dataset[:], 
                                  "2022-08-01",          #from_date
                                  "2023-01-30",          #to_date
                                  tokenizer, 
@@ -308,18 +310,12 @@ results = automatic_dataset_pred(actuality_dataset[9:10],
                                  sim_score=0.3,         # new score to tune sentence input
                                  word_padding=6,        
                                  threshold=0.9,         
-                                 max_input=50,          # set max input 0 to get everything
+                                 max_input=40,          # set max input 0 to get everything
                                  query_test=False,      # set True to only get Query Pipeline without Predictions
                                  use_NewsAPI=False)     # do not use NewsAPI for tests because of restriction to 100 uses   
 
+scoring = scoring(results)
 
-"""
-sample_1 = ["Daniel Zhang is the chief executive officer of [MASK] group.", "Alibaba"]
-input_sentence_1 = "Daniel Zhang is the chief executive officer of Alibaba group."
-
-
-a = word_piece_prediction(sample_1[0], input_sentence_1, model, tokenizer, threshold=0.9, max_input=5)  
-"""      
         
 
 

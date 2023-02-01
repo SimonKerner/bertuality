@@ -644,7 +644,7 @@ def load_actuality_dataset(tokenizer, delete_unknown_token = False):
     del actuality_dataset['Unnamed: 10']
     
     # rows that are not suitable for an actuality check
-    unsuitable_rows = [649, 673, 674, 675, 676, 677, 750, 751, 752]
+    unsuitable_rows = [619, 622, 644, 645, 648, 649, 655, 673, 674, 675, 676, 677, 707, 750, 751, 752, 756]
     
     # find rows with unknown Gold Token (= Gold token consists of multiple WordPieces)
     unknown_gold_token_rows = []
