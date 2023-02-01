@@ -252,6 +252,9 @@ def remove_longer_tuples(tuples_list):
 def pos_keywords(sample):
     sent = sample.replace("[MASK]", "")
     
+    # create acronyms for better keyword creation
+    sent = sample.replace("chief executive officer", "CEO")
+    
     # create token and pos-tags
     token = nltk.word_tokenize(sent)
     pos_tags = nltk.pos_tag(token) 
@@ -354,7 +357,6 @@ def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_inp
     return pred
 
 
-# TODO
 # main query for input data --> returns dict, but changeable to whatever
 def query_pipeline(sample, from_date, to_date, tokenizer, subset_size, sim_score, word_padding, use_NewsAPI = True):
     
