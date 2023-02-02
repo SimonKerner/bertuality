@@ -678,7 +678,7 @@ def automatic_dataset_pred(actuality_dataset, from_date, to_date, tokenizer, mod
         
         print(f"\nDataset Prediction Progress [{index+1}/{len(actuality_dataset)}]")
         
-        query = query_pipeline(actuality_dataset["MaskSatz"][index], from_date, to_date, tokenizer, subset_size=subset_size, sim_score=0.4, word_padding=word_padding, use_NewsAPI=use_NewsAPI)
+        query = query_pipeline(actuality_dataset["MaskSatz"][index], from_date, to_date, tokenizer, subset_size=subset_size, sim_score=sim_score, word_padding=word_padding, use_NewsAPI=use_NewsAPI)
         
         # For testing the query
         if query_test == True: 
