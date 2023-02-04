@@ -1,65 +1,69 @@
-import wikipedia
+from dateutil.relativedelta import relativedelta
 from newsapi import NewsApiClient
-import re
-import pandas as pd
-import requests
 from bs4 import BeautifulSoup
 from datetime import date
-from dateutil.relativedelta import relativedelta
+import pandas as pd
+import wikipedia
+import requests
+import re
 
 
 """
     Data Clean Up
-        - prep articles for better use in BERT
+        - prep loaded articles for better Text quality
 """
 
 def text_clean_up(str_text):
-    prep = re.sub(r'<[^>]*>', r"", str_text)                     # delete html tags
-    prep = re.sub(r'<!--.*', r"", prep)                          # also html tag
-    prep = re.sub(r'&(?:[a-z\d]+|#\d+|#x[a-f\d]+);', r"", prep)  # delete html special enteties
+    prep = re.sub(r'<[^>]*>', r"", str_text)                                # delete html tags
+    prep = re.sub(r'<!--.*', r"", prep)                                     # also html tag
+    prep = re.sub(r'&(?:[a-z\d]+|#\d+|#x[a-f\d]+);', r"", prep)             # delete html special enteties
     
     prep = prep.replace("\"", "")
     
     prep = prep.replace(r"…", r"...")
-    prep = re.sub(r'\s\w{0,2}\.{3}', r"", prep)      # delete a... if len a < 2
-    prep = re.sub(r"\.{2,}", r"", prep)              # delete if two or more "."
-    prep = re.sub(r'\-{1,}', r" ", prep)             # delete -
+    prep = re.sub(r'\s\w{0,2}\.{3}', r"", prep)                             # delete a... if len a < 2
+    prep = re.sub(r"\.{2,}", r"", prep)                                     # delete if two or more "."
+    prep = re.sub(r'([a-zA-Z])([-—])([a-zA-Z])', r"\1\3", prep)             # delete service-now and make to servicenow
     
-    prep = re.sub(r'\([^)]*\)', r"", prep)           # delete (asdf) in parenthesis 
-    prep = re.sub(r'\[[^]]*\]', r"", prep)           # delete [asdf] in brackets
-    prep = re.sub(r'[A-Z]*\b\/[A-Z]+', r"", prep)    # delete GUANGZHOU/TOKYO/BANGKOK
-    prep = re.sub(r"#\w*", r"", prep)                # delete hastag
-    prep = re.sub(r"(\d)(\,)(\d)", r"\1.\3", prep)   # 12,000 --> 12.000
-    prep = re.sub(r'([A-Z])s', r'\1', prep)        # delete CEOs --> CEO
+    prep = re.sub(r'\-{1,}', r" ", prep)                                    # delete -
+    
+    prep = re.sub(r'\([^)]*\)', r"", prep)                                  # delete (asdf) in parenthesis 
+    prep = re.sub(r'\[[^]]*\]', r"", prep)                                  # delete [asdf] in brackets
+    prep = re.sub(r'[A-Z]*\b\/[A-Z]+', r"", prep)                           # delete GUANGZHOU/TOKYO/BANGKOK
+    prep = re.sub(r"#\w*", r"", prep)                                       # delete hastag
+    prep = re.sub(r"(\d)(\,)(\d)", r"\1.\3", prep)                          # 12,000 --> 12.000
+    prep = re.sub(r'([A-Z])s', r'\1', prep)                                 # delete CEOs --> CEO
     
     prep = prep.replace(",", " ")
     
     # special deletions -contractions
-    prep = re.sub(r"[’']s", r"", prep)              # delete apostroph s
+    prep = re.sub(r"[’']s", r"", prep)                                      # delete apostroph s
     prep = re.sub(r"[’']d", r"", prep)
     prep = re.sub(r"[’']ll", r" will", prep)
     prep = re.sub(r"n[’']t", r" not", prep)
     prep = re.sub(r"n[’']re", r" are", prep)
     prep = re.sub(r"n[’']ve", r" have", prep)
+    prep = prep.replace("&", "and")
     
     # other replacements and deletions
     prep = prep.replace(r"$", r" $ ")
     prep = prep.replace(r"%", r" % ")       
-    prep = prep.replace("!", ".")
-    prep = prep.replace("?", ".")
+    prep = prep.replace(r"!", r".")
+    prep = prep.replace(r"?", r".")
     prep = re.sub(r"[—<>|®•:“”\"+;=–]", r"", prep)            
-
+    
     #line replacements
-    prep = re.sub(r"\r?\s+\n+|\r", r".", prep)                     # delete line break
-    prep = re.sub(r"\r?\n|\r", r".", prep)                         # delete line break
-    prep = re.sub(r"\.{2,}", r". ", prep)                          # if .. after line break
-    prep = re.sub(r'([a-zA-Z])(\.)([a-zA-Z])', r"\1\2 \3", prep)   # a.a --> a. a (better sentence split)
-    prep = re.sub(r'\s{2,}', r" ", prep)                           # if two or more whitespace
+    prep = re.sub(r"\r?\s+\n+|\r", r".", prep)                              # delete line break
+    prep = re.sub(r"\r?\n|\r", r".", prep)                                  # delete line break
+    prep = re.sub(r"\.{2,}", r". ", prep)                                   # if .. after line break
+    prep = re.sub(r'([a-zA-Z])(\.)([a-zA-Z])', r"\1\2 \3", prep)            # a.a --> a. a (better sentence split)
+    prep = re.sub(r'\s{2,}', r" ", prep)                                    # if two or more whitespace
     
     prep = prep.replace(",.", ". ")
     #prep = prep.replace(" , ", ", ")
     
-    prep = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', prep) # yearApple --> year Apple (but not iPhone)
+    prep = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', prep)          # yearApple --> year Apple (but not iPhone)
+    
     
     prep = prep.strip()
     
@@ -69,14 +73,14 @@ def text_clean_up(str_text):
     return prep
 
 
+
+
 """ 
-     API/Scraper Calls for Websites
-        - Wikipedia     -- working
-        - BBC           -- not working
-        - CNN           -- not working
-        - Guardian      -- working
-        - NYT           -- maybe working
-        - overall News  -- NewsAPI.org
+     API/Scraper Calls for Websites:
+
+"""
+"""
+    News API Call:
 """
 
 
@@ -98,6 +102,13 @@ def wikipedia_loader(keywords, num_pages=1):
     clean_pages = [text_clean_up(i) for i in pages] 
     return clean_pages
     
+
+
+
+"""
+    News API Call:
+"""
+
 
 def NewsAPI_loader(from_param, to, topic):           
     """
@@ -133,6 +144,8 @@ def NewsAPI_loader(from_param, to, topic):
             content.append(filtered)
 
     return content
+
+
 
 
 """
@@ -265,12 +278,14 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
     return get_articles(guardian_df["webUrl"])
 
 
+
+
 """
     overall News loader
 """
 
 
-def news_loader(from_date, to_date, keywords, use_NewsAPI = True):
+def news_loader(from_date, to_date, keywords, use_NewsAPI=True, use_gaurdian=True, use_wikipedia=True):
     
     topic = " AND ".join(keywords)                                                    
     
@@ -287,18 +302,22 @@ def news_loader(from_date, to_date, keywords, use_NewsAPI = True):
     loader = []
     if use_NewsAPI:
         try: news_api_query = NewsAPI_loader(from_date, to_date, topic)
-        except: pass
+        except: 
+            print("error in news api")
+            pass
         else: loader += news_api_query,
     
-    try: guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
-    except: pass
-    else: loader += guardian_query,
+    if use_gaurdian:
+        try: guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
+        except: pass
+        else: loader += guardian_query,
     
-    try: wikipedia_query = wikipedia_loader(keywords)
-    except: pass
-    else: loader += wikipedia_query,
-        
-    return loader
+    if use_wikipedia:
+        try: wikipedia_query = wikipedia_loader(keywords)
+        except: pass
+        else: loader += wikipedia_query,
+            
+        return loader
 
 
 
