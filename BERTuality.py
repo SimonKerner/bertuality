@@ -12,10 +12,11 @@ import nltk
 import re
 
 
+
+
 """
-    POS & NER Keyword Creation:
-        - output with keywords from mask_sentence sentence
-        - prefered POS -> faster and more accurate
+    POS & NER keyword creation:
+        - prefered POS -> faster and better usability
 """
 
 
@@ -25,10 +26,12 @@ def ner_keywords(mask_sentence, ner_model="bert-base-NER"):
     nlp = pipeline("ner", model = model, tokenizer=tokenizer)
     mask_sentence = mask_sentence.replace(".", "")
 
-    learn_new_token(mask_sentence, model, tokenizer)
+    #learn_new_token(mask_sentence, model, tokenizer)
     ner_results = nlp(mask_sentence)
     
     return [i.get("word") for i in ner_results[0]]
+
+
 
 
 # function removes duplicate tuples; ("Russias", "NNP") is removed, when there is also ("russia", "NNP")
@@ -42,6 +45,8 @@ def remove_longer_tuples(tuples_list):
     for t in to_remove:
         tuples_list.remove(t)
     return tuples_list
+
+
 
 
 # create keywords by POS tagging
@@ -170,7 +175,7 @@ def merge_pages(filtered_pages):
 """
 
 
-def remove_duplicates(input_sentences):   # durch Iterieren wird die originale Reihenfolge beibehalten!
+def remove_duplicates(input_sentences):   
     result = []
     for i in range(len(input_sentences)):
         a = input_sentences[i]
@@ -179,23 +184,33 @@ def remove_duplicates(input_sentences):   # durch Iterieren wird die originale R
     return result
 
 
+
+
 def remove_too_long_sentences(input_sentences, tokenizer):
     short_input_sentences = []
     for i in range(len(input_sentences)):
-        encoding = tokenizer.encode(input_sentences[i])
-        if len(encoding) <= 102:    #512/5 = 102; max token length: 512, each sentence is taken 5 times
-            short_input_sentences.append(input_sentences[i])
+        
+        try:
+            encoding = tokenizer.encode(input_sentences[i])
+        except:
+            continue
+        else:
+            #512/5 = 102; max token length: 512, each sentence is taken 5 times
+            if len(encoding) <= 102:    
+                short_input_sentences.append(input_sentences[i])
             
     return short_input_sentences
+
+
 
 
 def filterForOneWord(input_sentences, term):  
     result = []
     for i in range(len(input_sentences)):
         words = input_sentences[i].split()
-        words = [x.lower().strip() for x in words]  #lowercase and strip
-        words = [x.replace(".", "") for x in words] #remove "." because otherwise "." belongs to the word
-        words = [x.replace(",", "") for x in words] #remove "," because otherwise "," belongs to the word
+        words = [x.lower().strip() for x in words] 
+        words = [x.replace(".", "") for x in words]
+        words = [x.replace(",", "") for x in words] 
         words = [x.replace(":", "") for x in words]
         words = [x.replace(";", "") for x in words]
         words = [x.replace(")", "") for x in words]
@@ -203,9 +218,11 @@ def filterForOneWord(input_sentences, term):
         words = [x.replace("\"", "") for x in words]
         term = term.lower().strip()
         for word in words:
-            if term in word:    #term muss nur in Wort sein: "ama" steckt in "Obamas"
+            if term in word:   
                 result.append(input_sentences[i])
     return result  
+
+
 
 
 def filter_list(input_sentences, terms):
@@ -216,14 +233,16 @@ def filter_list(input_sentences, terms):
     return result
 
 
-def filter_list_final(input_sentences, twod_list, tokenizer, duplicates):    #twod_list = 2 dimensional list, but can also be a one-dimensional list!
+
+
+def filter_list_final(input_sentences, twod_list, tokenizer, duplicates):   
     result = [] 
     
-    if isinstance(twod_list[0], list):      # if the list is 2d
+    if isinstance(twod_list[0], list):     
         for lst in twod_list:
             result += filter_list(input_sentences, lst)
     
-    if isinstance(twod_list[0], str):                   # so that the given list can also be one-dimensional!
+    if isinstance(twod_list[0], str):                  
         result += filter_list(input_sentences, twod_list)
         
     if duplicates==False: result = remove_duplicates(result)
@@ -233,6 +252,8 @@ def filter_list_final(input_sentences, twod_list, tokenizer, duplicates):    #tw
     return result
 
 
+
+
 # function to create subsets from keywords, used in filter_for_keyword_subsets
 def create_subsets(mylist, subset_size):
     if subset_size > len(mylist):
@@ -240,6 +261,8 @@ def create_subsets(mylist, subset_size):
     subsets = [list(comb) for comb in itertools.combinations(mylist, subset_size)]
     
     return subsets
+
+
 
 
 def filter_for_keyword_subsets(input_sentences, keywords, tokenizer, subset_size, duplicates):
@@ -314,37 +337,35 @@ def keyword_focus(input_sentences, key_words, padding):
             case = 0
             while(error):
                 try:
-                    positions.append(tokens.index(word))          # find exact same word
+                    positions.append(tokens.index(word))            # find exact same word
                 except ValueError:
-                    if case == 0:           #word too long obama is part of obama-era
+                    if case == 0:                                   # word too long obama is part of obama-era
                         found = False
                         for i in tokens:  
                             if word in i:
                                 found = True
-                                tokens[tokens.index(i)] = word          # obama-era =set_to> obama
+                                tokens[tokens.index(i)] = word      # obama-era =set_to> obama
                                 break
                         if not found:
                             case = 1
                     
-                    elif case == 1:                                           # word is too short =shorten_keyword>
+                    elif case == 1:                                 # word is too short =shorten_keyword>
                         if len(word) > 0:      
                             word = word[:-1]
                         else:
-                            error = False # word is not in sentence
+                            error = False                           # word is not in sentence
                 else:
-                    #print(word) # word found in list
                     error = False
-        #print()
+
         if len(positions) != 0:
+            
             #add padding to positions
             left_pos, right_pos = min(positions), max(positions)
             left_pad, right_pad = left_pos - padding, right_pos + padding
             
             # check if pad is out of bound and if set to max available value
-            if left_pad < 0:
-                left_pad = 0
-            if right_pad > len(tokens):
-                right_pad = len(tokens)
+            if left_pad < 0: left_pad = 0
+            if right_pad > len(tokens): right_pad = len(tokens)
                 
             focus = tokens[left_pad : right_pad + 1]
             focus_input = " ".join(focus)
@@ -353,6 +374,7 @@ def keyword_focus(input_sentences, key_words, padding):
                 focus_input = focus_input + "."
             
             filtered_input.append(focus_input)
+            
         else:
             filtered_input.append(sentence)
     
@@ -368,7 +390,7 @@ def keyword_focus(input_sentences, key_words, padding):
 
 # main query for input data --> returns dict, returns completed list with query
 def dataprep_query(mask_sentence, loader_query, tokenizer, 
-                   subset_size, sim_score, word_padding, 
+                   subset_size, sim_score, focus_padding, 
                    extraction, similarity, focus, duplicates):
     
     key_words = pos_keywords(mask_sentence)
@@ -390,7 +412,7 @@ def dataprep_query(mask_sentence, loader_query, tokenizer,
     
     # focus_query
     if focus == True:
-        dataprep = keyword_focus(dataprep, key_words, word_padding)
+        dataprep = keyword_focus(dataprep, key_words, focus_padding)
     
     return dataprep
 
@@ -398,7 +420,7 @@ def dataprep_query(mask_sentence, loader_query, tokenizer,
 
 
 """
-    Complex Tokenizer + Detokenizer 
+    better tokenizer + detokenizer 
         - better detectability for word piece tokens
         - able to find hidden ones (wp inside of wp)
 """
@@ -411,6 +433,9 @@ def flatten(l):
             yield from flatten(sub)
         else:
             yield sub
+
+
+
 
 # create lists of further tokenized token
 def find_hidden_word_pieces(word_piece, tokenizer):
@@ -426,6 +451,8 @@ def find_hidden_word_pieces(word_piece, tokenizer):
         
     return hidden_wp
         
+
+
 
 # new tokenizer - able to find hidden word_pieces 
 def better_tokenizer(sentence, tokenizer):
@@ -447,6 +474,8 @@ def better_tokenizer(sentence, tokenizer):
     return list(flatten(better_tokens))
 
 
+
+
 def detokenizer(token_list, tokenizer):
     detoken = tokenizer.convert_tokens_to_string(token_list)
     detoken = re.sub(r'( )([\'\.])( ){0,}', r'\2', detoken)
@@ -458,7 +487,7 @@ def detokenizer(token_list, tokenizer):
 
 
 """
-    OR_PRED_QUERY -- Original BERT_Prediction Pipeline:  
+    OR_PRED_QUERY -- Original Projekt: BERT_Prediction Pipeline:  
         - uses fill_mask_pipeline
 """
 
@@ -513,8 +542,10 @@ def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_inp
     return pred
 
 
+
+
 # main query for input data --> returns dict, but changeable to whatever
-def query_pipeline(sample, from_date, to_date, tokenizer, subset_size, sim_score, word_padding, use_NewsAPI = True):
+def query_pipeline(sample, from_date, to_date, tokenizer, subset_size, sim_score, focus_padding, use_NewsAPI = True):
     
     key_words = pos_keywords(sample)
     
@@ -523,7 +554,7 @@ def query_pipeline(sample, from_date, to_date, tokenizer, subset_size, sim_score
     merged_query = merge_pages(split_query)
     extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, subset_size)
     similarity_query = similarity_filter(sample, extraction_query, sim_score)
-    focus_query = keyword_focus(similarity_query, key_words, word_padding)
+    focus_query = keyword_focus(similarity_query, key_words, focus_padding)
     
     query_dict = {"01_sample": sample,
                   "02_keywords": key_words,
@@ -563,6 +594,8 @@ def create_expand_sentences(tokens, wp_position, tokenizer):
     return word_piece_input
 
 
+
+
 def word_piece_temp_df_pred(mask_sentence, tokens, wp_position, model, tokenizer):
     
     ## create sentences - for a whole word piece word
@@ -590,6 +623,8 @@ def word_piece_temp_df_pred(mask_sentence, tokens, wp_position, model, tokenizer
     return temp_df
 
 
+
+
 def word_piece_prediction(mask_sentence, input_sentences, model, tokenizer, max_input=None, combine=True, threshold=None):
     start_time = time.perf_counter()
     # find index of ali ##ba ##ba
@@ -597,8 +632,8 @@ def word_piece_prediction(mask_sentence, input_sentences, model, tokenizer, max_
     # find whole word pieces
     if max_input != None: input_sentences = input_sentences[:max_input]
     
-    print("    Starting WordPiece Prediction:")
-    print("    Sentence:", mask_sentence)
+    print(mask_sentence)
+    print("\n    Starting WordPiece Prediction:")
     print("    Input Size:", len(input_sentences))
     
     #output storage
@@ -671,7 +706,7 @@ def word_piece_prediction(mask_sentence, input_sentences, model, tokenizer, max_
         status+=1
         print("    Progress -->", round(status/sen_size*100, 2), "%")
     end_time = time.perf_counter()
-    print(f"    Performance: {end_time - start_time:0.4f} seconds")
+    print(f"    WPP-Performance: {end_time - start_time:0.4f} seconds")
           
     #return list of sentences with  --> return predicted sentences from focus
     return wp_results
@@ -684,7 +719,7 @@ def word_piece_prediction(mask_sentence, input_sentences, model, tokenizer, max_
 ######################################################################################################################
 
 
-def make_predictions_v2(masked_sentence, input_sentences, model, tokenizer, max_input=None, targets=None):
+def make_predictions_v2(masked_sentence, input_sentences, model, tokenizer, max_input=None, only_target_token=None, targets=None):
     
     if len(input_sentences) == 0: return
     if max_input != None: input_sentences = input_sentences[:max_input]
@@ -714,7 +749,10 @@ def make_predictions_v2(masked_sentence, input_sentences, model, tokenizer, max_
         sent = (pred.iloc[i].iloc[1] + " " + pred.iloc[i].iloc[1] + " " + pred.iloc[i].iloc[0] + " " + pred.iloc[i].iloc[1] + " " + pred.iloc[i].iloc[1])
         sentences.append(sent)
         
-        preds_i = fill_mask_pipeline_pre(sent, targets=targets)[:3]
+        if only_target_token == False or only_target_token == None:
+            preds_i = fill_mask_pipeline_pre(sent)[:3] 
+        elif only_target_token == True:
+            preds_i = fill_mask_pipeline_pre(sent, targets=targets)[:3]
     
         token1.append(preds_i[0]['token_str'].replace(" ", ""))
         score1.append(preds_i[0]['score'])
@@ -733,6 +771,8 @@ def make_predictions_v2(masked_sentence, input_sentences, model, tokenizer, max_
     pred['score3'] = score3
     
     return pred
+
+
 
 
 def wp_find_positions(tokens):
@@ -762,6 +802,8 @@ def wp_find_positions(tokens):
     return every_wp_position
 
 
+
+
 def wp_input_sentence_creator(tokens, every_wp_position, tokenizer):
     int_wp_positions = [j for i in every_wp_position for j in i]
     int_basic_sentence = [j for j in range(len(tokens)) if j not in int_wp_positions]
@@ -782,15 +824,18 @@ def wp_input_sentence_creator(tokens, every_wp_position, tokenizer):
     return wpw_input_sentences
 
 
-def wp_prediction_pred_v2(mask_sentence, inputs, model, tokenizer, target_token):
+
+
+def wp_prediction_pred_v2(mask_sentence, inputs, model, tokenizer, max_input, only_target_token, target_token):
     
-    # delete duplicates
-    target_token = list(dict.fromkeys(target_token))
-    target_token = [t.replace("##", "") for t in target_token]
-    target_token = [t for t in target_token if t != "."]
+    if only_target_token == True:
+        # delete duplicates
+        target_token = list(dict.fromkeys(target_token))
+        target_token = [t.replace("##", "") for t in target_token]
+        target_token = [t for t in target_token if t != "."]
     
     
-    piece_pred = make_predictions_v2(mask_sentence, inputs, model, tokenizer, max_input=None, targets=target_token)
+    piece_pred = make_predictions_v2(mask_sentence, inputs, model, tokenizer, max_input, only_target_token, targets=target_token)
     
     concat_word = ""
     if piece_pred["token1"].nunique() == 1:
@@ -808,15 +853,17 @@ def wp_prediction_pred_v2(mask_sentence, inputs, model, tokenizer, target_token)
     return temp_df
 
 
-def word_piece_prediction_v2(mask_sentence, input_sentences, model, tokenizer, max_input=None, combine=True, threshold=None):
+
+
+def word_piece_prediction_v2(mask_sentence, input_sentences, model, tokenizer, max_input=None, combine=True, threshold=None, only_target_token=None):
     start_time = time.perf_counter()
     # find index of ali ##ba ##ba
     # rule word bevore ## is always part of whole word
     # find whole word pieces
     if max_input != None: input_sentences = input_sentences[:max_input]
     
-    print("    Starting WordPiece Prediction:")
-    print("    Sentence:", mask_sentence)
+    print(mask_sentence)
+    print("\n    Starting WordPiece Prediction:")
     print("    Input Size:", len(input_sentences))
     
     #output storage
@@ -843,9 +890,12 @@ def word_piece_prediction_v2(mask_sentence, input_sentences, model, tokenizer, m
             
             for inputs in wpw_input_sentences:
                 
-                target_token = [better_tokenizer(i, tokenizer) for i in inputs]
-                target_token = [j for i in target_token for j in i]
-                temp_df = wp_prediction_pred_v2(mask_sentence, inputs, model, tokenizer, target_token)
+                target_token = None
+                if only_target_token == True:
+                    target_token = [better_tokenizer(i, tokenizer) for i in inputs]
+                    target_token = [j for i in target_token for j in i]
+                
+                temp_df = wp_prediction_pred_v2(mask_sentence, inputs, model, tokenizer, max_input, only_target_token, target_token)
                 
                 if combine == True:
                     wp_temp_df = pd.concat([wp_temp_df, temp_df], ignore_index=True)
@@ -860,11 +910,13 @@ def word_piece_prediction_v2(mask_sentence, input_sentences, model, tokenizer, m
         # if size wp_results == 0 --> no wp_word was found (all tokens known) --> use normal make_pred pipe for prediction
         if type(wp_temp_df) == type(None):
             
-            tokens = list(dict.fromkeys(tokens))
-            tokens = [t.replace("##", "") for t in tokens]
+            target_token = None
+            if only_target_token == True:
+                target_token = list(dict.fromkeys(tokens))
+                target_token = [t.replace("##", "") for t in tokens]
             
             # get results of prediction in DataFrame
-            temp_df = make_predictions_v2(mask_sentence, [sentence], model, tokenizer, max_input=None, targets=tokens)
+            temp_df = make_predictions_v2(mask_sentence, [sentence], model, tokenizer, max_input, only_target_token, target_token)
             
             # concat results of
             wp_results = pd.concat([wp_results, temp_df], ignore_index=True)
@@ -882,7 +934,7 @@ def word_piece_prediction_v2(mask_sentence, input_sentences, model, tokenizer, m
         status+=1
         print("    Progress -->", round(status/sen_size*100, 2), "%")
     end_time = time.perf_counter()
-    print(f"    Performance: {end_time - start_time:0.4f} seconds")
+    print(f"    WPP-Performance: {end_time - start_time:0.4f} seconds")
           
     #return list of sentences with  --> return predicted sentences from focus
     return wp_results
@@ -921,288 +973,86 @@ def simple_pred_results(pred_query):
 
 
 """
-    Learn New Tokens - failed
-"""
-
-# learn all gold token in given dataset
-def learn_all_new_gold_token(dataset, model, tokenizer):
-    # create list of gold token from given dataset
-    gold_token = list(dataset['Gold'])
-    
-    # add new token to tokenizer
-    num_added_toks = tokenizer.add_tokens(gold_token)
-    model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
-  
-    
-# learn one new gold token in mask_sentence, mask_sentence has to look like this: ['sentence', 'gold token']    
-def learn_new_token(mask_sentence, model, tokenizer):
-    # create list of all token form given mask_sentence ['sentence', 'gold token']
-    gold_token = [mask_sentence[1]]
-    other_token = mask_sentence[0].split()
-    new_token = gold_token + other_token #1st new token gets id 30522
-    
-    # add new token to tokenizer
-    num_added_toks = tokenizer.add_tokens(new_token)
-    model.resize_token_embeddings(len(tokenizer)) #resize the token embedding matrix of the model so that its embedding matrix matches the tokenizer
-
-
-
-
-"""
-    Dataset functions for faster testing
+    bertuality_main_func
 """
 
 
-def load_actuality_dataset(tokenizer, delete_unknown_token = False):
-    # load dataset
-    actuality_dataset = pd.read_excel (r'DS_Aktualitätsprüfung.xlsx', sheet_name = 'Gesamt Daten')
-    # filter datset
-    actuality_dataset = actuality_dataset[(actuality_dataset['Quelle'] == 'Eigenkreation') & 
-                                          ((actuality_dataset['Akt.-Ind./Wortart'] == 'Subjekt') |
-                                          (actuality_dataset['Akt.-Ind./Wortart'] == 'Objekt') |
-                                          (actuality_dataset['Akt.-Ind./Wortart'] == 'Zahl/Objekt'))]
-    # reset index, delete unnecessary columns
-    actuality_dataset = actuality_dataset.reset_index()
-    del actuality_dataset['index']
-    del actuality_dataset['Unnamed: 7']
-    del actuality_dataset['Unnamed: 8']
-    del actuality_dataset['Unnamed: 9']
-    del actuality_dataset['Unnamed: 10']
-    
-    # rows that are not suitable for an actuality check
-    unsuitable_rows = [619, 622, 644, 645, 648, 649, 655, 673, 674, 675, 676, 677, 707, 750, 751, 752, 756]
-    
-    # find rows with unknown Gold Token (= Gold token consists of multiple WordPieces)
-    unknown_gold_token_rows = []
-    if delete_unknown_token:
-        for index, row in actuality_dataset.iterrows():
-            gold_token = row['Gold']
-            encoding = tokenizer.encode(str(gold_token))
-            if (len(encoding) != 3):    # if encoding consists of more than CLS + Token + SEP
-                unknown_gold_token_rows.append(int(row['Nummer']))
-    
-    # delete the rows with unknown gold tokens and the unsuitable rows
-    rows_to_delete = unsuitable_rows + unknown_gold_token_rows
-    for i in rows_to_delete:
-        actuality_dataset = actuality_dataset[actuality_dataset.Nummer != i]
-        
-    # delete rows that the tokenizer does not know the vaule of
-    #for i in actuality_dataset:
-    actuality_dataset = actuality_dataset.reset_index(drop=True)
-    return actuality_dataset
+def load_default_config():
+    default_config = {
+        'model': 'bert-base-uncased',
+        'tokenizer':'bert-base-uncased',
+        'from_date': '2022-10-01',
+        'to_date': '2023-01-30',
+        'use_NewsAPI': True, 
+        'use_guardian': False, 
+        'use_wikipedia': True, 
+        'subset_size': 2,
+        'sim_score': 0.3,
+        'focus_padding': 6,
+        'duplicates': False,
+        'extraction': True,
+        'similarity': True,
+        'focus': True,
+        'max_input': 30,
+        'threshold': 0.9,
+        'only_target_token': True
+        }
+    return default_config
 
 
-def automatic_dataset_pred(actuality_dataset, loader_query, tokenizer, model, 
-                           subset_size=2, sim_score=0, word_padding=0, 
-                           threshold=None, max_input=None, query_test=False, 
-                           extraction=True, similarity=True, focus=True, duplicates=False):
-    
-    actuality_dataset = actuality_dataset.reset_index(drop=True)
-    
-    results = []
-    error = []
-    for index in range(len(actuality_dataset)):
-        
-        print(f"\nDataset Prediction Progress [{index+1}/{len(actuality_dataset)}]")
-        
-        
-        query = dataprep_query(actuality_dataset["MaskSatz"][index], loader_query[index], tokenizer, 
-                               subset_size=subset_size, sim_score=sim_score, word_padding=word_padding, 
-                               extraction=extraction, similarity=similarity, focus=focus, duplicates=duplicates)
-        
-        # For testing the query
-        if query_test == True: 
-            results += query, 
-            continue
-        
-        # safety mech
-        if len(query)==0: 
-            samp_results = {"01_Nummer": actuality_dataset["Nummer"][index],
-                   "02_MaskSatz": actuality_dataset["MaskSatz"][index],
-                   "03_Original": actuality_dataset["Original"][index],
-                   "04_Gold":actuality_dataset["Gold"][index],
-                   "05_query": query,
-                   "06_Prediction": "Error"}
-            results.append(samp_results)
-            error += index,
-            continue
-        
-        # Test Knowlede of BERT without input
-        kn_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], [""], model, tokenizer, max_input=max_input)              
-        kn_simple_results = simple_pred_results(kn_pred_query)
-        
-        # Test Original BERT with input
-        or_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], query, model, tokenizer, max_input=max_input)              
-        or_simple_results = simple_pred_results(or_pred_query)  
-        
-        wp_pred_query = word_piece_prediction(actuality_dataset["MaskSatz"][index], query, model, tokenizer, 
-                                              threshold=threshold, max_input=max_input)              
-        wp_simple_results = simple_pred_results(wp_pred_query)                                  
-        
-        
-        samp_results = {"01_Nummer": actuality_dataset["Nummer"][index],
-                   "02_MaskSatz": actuality_dataset["MaskSatz"][index],
-                   "03_Original": actuality_dataset["Original"][index],
-                   "04_Gold":actuality_dataset["Gold"][index],
-                   "05_query": query,
-                   "06_keywords": pos_keywords(actuality_dataset["MaskSatz"][index]),
-                   
-                   "07_kn_pred_query": kn_pred_query,
-                   "08_kn_simple_results": kn_simple_results,
-                   "09_kn_word": kn_simple_results["Token"][0],
-                   "10_kn_score": kn_simple_results["sum_up_score"][0],
-                   
-                   "11_or_pred_query": or_pred_query,
-                   "12_or_simple_results": or_simple_results,
-                   "13_or_word": or_simple_results["Token"][0],
-                   "14_or_score": or_simple_results["sum_up_score"][0],
-                   
-                   "15_wp_pred_query": wp_pred_query,
-                   "16_wp_simple_results": wp_simple_results,
-                   "17_wp_word": wp_simple_results["Token"][0],
-                   "18_wp_score": wp_simple_results["sum_up_score"][0],
-                   }
-        results.append(samp_results)
-    
-    print("\nActuality_Dataset Prediction Summary:")
-    print("Length Dataset:", len(results))
-    print("Predictions on:", round((len(results) - len(error))/len(results)*100, 2), "% of Dataset")
-    print("No Predictions for Index:", error)
-    
-    return results
 
 
-# THIS PRED IS USED FOR WP-PRED v2
-def automatic_dataset_pred_v2(actuality_dataset, loader_query, tokenizer, model, 
-                           subset_size=2, sim_score=0.0, word_padding=0, 
-                           threshold=None, max_input=None, query_test=False, 
-                           extraction=True, similarity=True, focus=True, duplicates=False):
+def bertuality(mask_sentence, config=None, return_values=False):
     
-    actuality_dataset = actuality_dataset.reset_index(drop=True)
+    try:
+        if type(config) == type(None):
+            config = load_default_config()
+        elif type(config) == type(dict):
+            config = config
+        else: raise ValueError
+        
+    except ValueError: 
+        print("No valid config found!")
+        print("Set config to 'None' for default values")
+        
+    else:
+        model = BertForMaskedLM.from_pretrained(config["model"])
+        tokenizer = BertTokenizer.from_pretrained(config["tokenizer"])
+        print()
     
-    results = []
-    error = []
-    for index in range(len(actuality_dataset)):
+        data = loader_query(mask_sentence, 
+                            config["from_date"], 
+                            config["to_date"], 
+                            config["use_NewsAPI"], 
+                            config["use_guardian"], 
+                            config["use_wikipedia"])
         
-        print(f"\nDataset Prediction Progress [{index+1}/{len(actuality_dataset)}]")
+        dataprep = dataprep_query(mask_sentence, 
+                                  data['08_loader_query'], 
+                                  tokenizer, 
+                                  config['subset_size'], 
+                                  config['sim_score'], 
+                                  config['focus_padding'], 
+                                  config['extraction'], 
+                                  config['similarity'], 
+                                  config['focus'], 
+                                  config['duplicates'])
         
+        prediction = word_piece_prediction_v2(mask_sentence, 
+                                           dataprep, 
+                                           model, 
+                                           tokenizer, 
+                                           max_input=config['max_input'],
+                                           threshold=config['threshold'],
+                                           only_target_token=config['only_target_token'])
         
-        query = dataprep_query(actuality_dataset["MaskSatz"][index], loader_query[index], tokenizer, 
-                               subset_size=subset_size, sim_score=sim_score, word_padding=word_padding, 
-                               extraction=extraction, similarity=similarity, focus=focus, duplicates=duplicates)
-        
-        # For testing the query
-        if query_test == True: 
-            results += query, 
-            continue
-        
-        # safety mech
-        if len(query)==0: 
-            samp_results = {"01_Nummer": actuality_dataset["Nummer"][index],
-                   "02_MaskSatz": actuality_dataset["MaskSatz"][index],
-                   "03_Original": actuality_dataset["Original"][index],
-                   "04_Gold":actuality_dataset["Gold"][index],
-                   "05_query": query,
-                   "06_Prediction": "Error"}
-            results.append(samp_results)
-            error += index,
-            continue
-        
-        # Test Knowlede of BERT without input
-        kn_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], [""], model, tokenizer, max_input=max_input)              
-        kn_simple_results = simple_pred_results(kn_pred_query)
-        
-        # Test Original BERT with input
-        or_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], query, model, tokenizer, max_input=max_input)              
-        or_simple_results = simple_pred_results(or_pred_query)  
-        
-        # Test full Word Piece Prediction # TODO is v2!!!!!!!!!!!!!!!!!
-        wp_pred_query = word_piece_prediction_v2(actuality_dataset["MaskSatz"][index], query, model, tokenizer, 
-                                              threshold=threshold, max_input=max_input)              
-        wp_simple_results = simple_pred_results(wp_pred_query)                                  
-        
-        
-        samp_results = {"01_Nummer": actuality_dataset["Nummer"][index],
-                   "02_MaskSatz": actuality_dataset["MaskSatz"][index],
-                   "03_Original": actuality_dataset["Original"][index],
-                   "04_Gold":actuality_dataset["Gold"][index],
-                   "05_query": query,
-                   "06_keywords": pos_keywords(actuality_dataset["MaskSatz"][index]),
-                   
-                   "07_kn_pred_query": kn_pred_query,
-                   "08_kn_simple_results": kn_simple_results,
-                   "09_kn_word": kn_simple_results["Token"][0],
-                   "10_kn_score": kn_simple_results["sum_up_score"][0],
-                   
-                   "11_or_pred_query": or_pred_query,
-                   "12_or_simple_results": or_simple_results,
-                   "13_or_word": or_simple_results["Token"][0],
-                   "14_or_score": or_simple_results["sum_up_score"][0],
-                   
-                   "15_wp_pred_query": wp_pred_query,
-                   "16_wp_simple_results": wp_simple_results,
-                   "17_wp_word": wp_simple_results["Token"][0],
-                   "18_wp_score": wp_simple_results["sum_up_score"][0],
-                   }
-        results.append(samp_results)
-    
-    print("\nActuality_Dataset Prediction Summary:")
-    print("Length Dataset:", len(results))
-    print("Predictions on:", round((len(results) - len(error))/len(results)*100, 2), "% of Dataset")
-    print("No Predictions for Index:", error)
-    
-    return results
+        simple_pred = simple_pred_results(prediction)
 
-
-# create a dataFrame with all the important scores and informations about the tests
-def scoring(results):
-    # initialize scores
-    corr_kn = 0
-    corr_or = 0
-    corr_persuaded_or = 0
-    corr_wp = 0
-    corr_persuaded_wp = 0
-    num_query_empty = 0
-    num_of_tests = len(results)
-    
-    # calculate scores
-    for i in results:
-        if ('06_Prediction' not in i):
-            if (i['09_kn_word'] == i['04_Gold']): corr_kn += 1
-            if (i['13_or_word'] == i['04_Gold']): corr_or += 1
-            if (i['17_wp_word'] == i['04_Gold']): corr_wp += 1
-            
-            if (i['13_or_word'] == i['04_Gold'] and i['13_or_word'] != i['09_kn_word']): 
-                corr_persuaded_or += 1
-            if (i['17_wp_word'] == i['04_Gold'] and i['17_wp_word'] != i['09_kn_word']):
-                corr_persuaded_wp += 1
-        else:
-            num_query_empty += 1
-      
-    # calculate average scores        
-    avg_corr_kn = round(corr_kn / num_of_tests, 3)
-    avg_corr_or = round(corr_or / num_of_tests, 3)
-    avg_corr_persuaded_or = round(corr_persuaded_or / num_of_tests, 3)
-    avg_corr_wp = round(corr_wp / num_of_tests, 3)
-    avg_corr_persuaded_wp = round(corr_persuaded_wp /num_of_tests, 3)
-    
-    # create df
-    columns = ["avg", "avg_pers", "#tests", "#empty"]
-    rows = ["knowledge", "original", "word-peice"]
-    results = pd.DataFrame(index = rows, columns = columns)
-    
-    #fill df
-    avg_corr_values = [avg_corr_kn, avg_corr_or, avg_corr_wp]
-    avg_corr_persuaded_values = [0, avg_corr_persuaded_or, avg_corr_persuaded_wp]
-    num_query_empty_value = [num_query_empty, "/", "/"]
-    num_of_tests_value = [num_of_tests, "/", "/"]
-    
-    results["avg"] = avg_corr_values
-    results["avg_pers"] = avg_corr_persuaded_values
-    results["#empty"] = num_query_empty_value
-    results["#tests"] = num_of_tests_value
-    
-    return results
+        pred_sentence = mask_sentence.replace("[MASK]", simple_pred["Token"][0].capitalize())
+        print("\n" + pred_sentence)
+        
+        if return_values == True:
+            return [mask_sentence, config, data, dataprep, prediction, simple_pred, pred_sentence]
                 
     
   

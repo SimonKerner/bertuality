@@ -8,10 +8,13 @@ import requests
 import re
 
 
+
+
 """
-    Data Clean Up
-        - prep loaded articles for better Text quality
+    data clean Up
+        - prep loaded articles for better text quality
 """
+
 
 def text_clean_up(str_text):
     prep = re.sub(r'<[^>]*>', r"", str_text)                                # delete html tags
@@ -27,14 +30,15 @@ def text_clean_up(str_text):
     
     prep = re.sub(r'\-{1,}', r" ", prep)                                    # delete -
     
-    prep = re.sub(r'\([^)]*\)', r"", prep)                                  # delete (asdf) in parenthesis 
     prep = re.sub(r'\[[^]]*\]', r"", prep)                                  # delete [asdf] in brackets
+    prep = re.sub(r'\([^)]*\)', r"", prep)                                  # delete (asdf) in parenthesis 
     prep = re.sub(r'[A-Z]*\b\/[A-Z]+', r"", prep)                           # delete GUANGZHOU/TOKYO/BANGKOK
     prep = re.sub(r"#\w*", r"", prep)                                       # delete hastag
     prep = re.sub(r"(\d)(\,)(\d)", r"\1.\3", prep)                          # 12,000 --> 12.000
     prep = re.sub(r'([A-Z])s', r'\1', prep)                                 # delete CEOs --> CEO
     
     prep = prep.replace(",", " ")
+    
     
     # special deletions -contractions
     prep = re.sub(r"[’']s", r"", prep)                                      # delete apostroph s
@@ -43,7 +47,12 @@ def text_clean_up(str_text):
     prep = re.sub(r"n[’']t", r" not", prep)
     prep = re.sub(r"n[’']re", r" are", prep)
     prep = re.sub(r"n[’']ve", r" have", prep)
-    prep = prep.replace("&", "and")
+    prep = prep.replace(r"&", r"and")
+    prep = prep.replace(r" PM ", r" Prime Minister ")
+    prep = prep.replace(r" U. S. ", r" United States ")
+    prep = prep.replace(r" US ", r" United States ")
+    prep = prep.replace(r" UK ", r" United Kingdom ")
+    
     
     # other replacements and deletions
     prep = prep.replace(r"$", r" $ ")
@@ -60,10 +69,8 @@ def text_clean_up(str_text):
     prep = re.sub(r'\s{2,}', r" ", prep)                                    # if two or more whitespace
     
     prep = prep.replace(",.", ". ")
-    #prep = prep.replace(" , ", ", ")
     
-    prep = re.sub(r'([a-z]){2}([A-Z]{1}[a-zA-Z])', r'\1 \2', prep)          # yearApple --> year Apple (but not iPhone)
-    
+    prep = re.sub(r' ([a-z]){1}([A-Z]{1}[a-zA-Z])', r'\1 \2', prep)          # yearApple --> year Apple (but not iPhone)
     
     prep = prep.strip()
     
@@ -76,11 +83,13 @@ def text_clean_up(str_text):
 
 
 """ 
-     API/Scraper Calls for Websites:
+     API/Scraper calls for websites:
 
 """
+
+
 """
-    News API Call:
+    wikipedia API call:
 """
 
 
@@ -91,22 +100,28 @@ def wikipedia_loader(keywords, num_pages=1):
     response = requests.get("https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&formatversion=2"
                             + "&srsearch=" + srsearch + "&prop=extracts&srnamespace=0&srinfo=totalhits"
                             + "&srprop=wordcount%7Csnippet&srsort=relevance&srlimit=" + str(num_pages))
+    
     json = response.json()
+    
     titles = [i["title"] for i in json["query"]["search"]] 
     
     pages = []
     for t in titles:
-        try: pages += wikipedia.WikipediaPage(title=t).summary,
-        except: continue
+        
+        try: 
+            pages += wikipedia.WikipediaPage(title=t).summary,
+        except: 
+            continue
     
     clean_pages = [text_clean_up(i) for i in pages] 
+    
     return clean_pages
     
 
 
 
 """
-    News API Call:
+    NewsAPI call:
 """
 
 
@@ -149,7 +164,7 @@ def NewsAPI_loader(from_param, to, topic):
 
 
 """
-    Guardian API Call:
+    GuardianAPI call:
 """
 
 
@@ -165,12 +180,16 @@ def query_api(page, from_date, to_date, order_by, query, api_key):
     return response
 
 
+
+
 def path_lookup_api(page, from_date, to_date, order_by, path, api_key):
 
     response = requests.get("https://content.guardianapis.com/" + path + "?from-date="
                             + from_date + "&to-date=" + to_date + "&page=" + str(page) 
                             + "&page-size=200&order-by=" + order_by + "&api-key=" + api_key)
     return response
+
+
 
 
 def get_results_for_query(from_date, to_date, order_by, query, api_key):
@@ -190,6 +209,8 @@ def get_results_for_query(from_date, to_date, order_by, query, api_key):
     return json_responses
 
 
+
+
 def get_results_for_path_lookup(from_date, to_date, order_by, path, api_key):
     json_responses = []
     response = path_lookup_api(1, from_date, to_date, order_by, path, api_key).json()
@@ -200,6 +221,8 @@ def get_results_for_path_lookup(from_date, to_date, order_by, path, api_key):
             response = path_lookup_api(page, from_date, to_date, order_by, path, api_key).json()
             json_responses.append(response)
     return json_responses
+
+
 
 
 def convert_json_responses_to_df(json_responses):
@@ -214,6 +237,8 @@ def convert_json_responses_to_df(json_responses):
     return all_df
 
 
+
+
 def guardian_call(from_date, to_date, query, path, order_by, api_key):
     
     if query != "" and path == "":
@@ -226,12 +251,15 @@ def guardian_call(from_date, to_date, query, path, order_by, api_key):
     clean_json_responses = []
     for i in range(len(json_responses)):
         get_status = json_responses[i].get("response").get("status")
+        
         if get_status == "ok":
             clean_json_responses.append(json_responses[i])
 
     guardian_df = convert_json_responses_to_df(clean_json_responses)
     
     return guardian_df
+
+
 
 
 def get_articles(link_df):
@@ -244,7 +272,6 @@ def get_articles(link_df):
         raw_html = " ".join(map(str, p_content))
         
         filtered = text_clean_up(raw_html)
-        
         filtered = filtered.replace("Sign up now! Sign up now! Sign up now? Sign up now!", "")     
         filtered = filtered.replace("""Sign up to Business TodayGet set for the working 
                                     day – we'll point you to the all the business 
@@ -254,6 +281,8 @@ def get_articles(link_df):
             filtered_article_list.append(filtered)
             
     return filtered_article_list
+
+
 
 
 def guardian_loader(from_date, to_date, query="", path="", order_by="relevance"):
@@ -281,7 +310,7 @@ def guardian_loader(from_date, to_date, query="", path="", order_by="relevance")
 
 
 """
-    overall News loader
+    overall news-loader
 """
 
 
@@ -292,13 +321,6 @@ def news_loader(from_date, to_date, keywords, use_NewsAPI=True, use_gaurdian=Tru
     # get current date
     #to_date = date.today().strftime("%Y-%m-%d")
     
-    # call different loaders; Wikipedia not included
-    # to_date could be added to NewsAPI_loader
-    # to_date is automatically the current date; from_date is never older than one month before current date (according to NewsAPI free plan)
-    #news_api_query = NewsAPI_loader(from_date, topic)   
-    #wikipedia_query = wikipedia_loader(" ".join(keywords))
-    #guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
-    
     loader = []
     if use_NewsAPI:
         try: news_api_query = NewsAPI_loader(from_date, to_date, topic)
@@ -307,17 +329,20 @@ def news_loader(from_date, to_date, keywords, use_NewsAPI=True, use_gaurdian=Tru
             pass
         else: loader += news_api_query,
     
+    
     if use_gaurdian:
         try: guardian_query = guardian_loader(from_date=from_date, to_date=to_date, query=topic)
         except: pass
         else: loader += guardian_query,
+    
     
     if use_wikipedia:
         try: wikipedia_query = wikipedia_loader(keywords)
         except: pass
         else: loader += wikipedia_query,
             
-        return loader
+        
+    return loader
 
 
 
