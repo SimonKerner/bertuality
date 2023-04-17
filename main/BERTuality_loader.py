@@ -319,7 +319,8 @@ def news_loader(from_date, to_date, keywords, use_NewsAPI=True, use_gaurdian=Tru
     topic = " AND ".join(keywords)                                                    
     
     # get current date
-    #to_date = date.today().strftime("%Y-%m-%d")
+    if to_date == "":
+        to_date = date.today().strftime("%Y-%m-%d")
     
     loader = []
     if use_NewsAPI:

@@ -47,7 +47,7 @@ def learn_new_token(mask_sentence, model, tokenizer):
 
 def load_actuality_dataset(tokenizer, delete_unknown_token = False):
     # load dataset
-    actuality_dataset = pd.read_excel (r'DS_Aktualitätsprüfung.xlsx', sheet_name = 'Gesamt Daten')
+    actuality_dataset = pd.read_excel (r'data/DS_Aktualitätsprüfung.xlsx', sheet_name = 'Gesamt Daten')
     # filter datset
     actuality_dataset = actuality_dataset[(actuality_dataset['Quelle'] == 'Eigenkreation') & 
                                           ((actuality_dataset['Akt.-Ind./Wortart'] == 'Subjekt') |

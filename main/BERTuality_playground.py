@@ -31,9 +31,9 @@ example_config = {
 """
 
 #bertuality(mask_sentence)
-values_1 = bertuality("Obama is the [MASK] president of America.", return_values=True)
+#values_1 = bertuality("Obama is the [MASK] president of America.", return_values=True)
 
-values_2 = bertuality("Donald Trump is the [MASK] president of America.", return_values=True)
+#values_2 = bertuality("Donald Trump is the [MASK] president of America.", return_values=True)
 
 values_3 = bertuality("Tim Cook is the current CEO of [MASK].", return_values=True)
 

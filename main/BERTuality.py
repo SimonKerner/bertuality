@@ -979,10 +979,10 @@ def simple_pred_results(pred_query):
 
 def load_default_config():
     default_config = {
-        'model': 'bert-base-uncased',
-        'tokenizer':'bert-base-uncased',
-        'from_date': '2022-10-01',
-        'to_date': '2023-01-30',
+        'model': r'model',
+        'tokenizer': r'tokenizer',
+        'from_date': '2023-03-01',
+        'to_date': '',
         'use_NewsAPI': True, 
         'use_guardian': False, 
         'use_wikipedia': True, 
@@ -1018,14 +1018,18 @@ def bertuality(mask_sentence, config=None, return_values=False):
     else:
         model = BertForMaskedLM.from_pretrained(config["model"])
         tokenizer = BertTokenizer.from_pretrained(config["tokenizer"])
+        
         print()
-    
+        print("Step 1: Load config --> Done")
+        
         data = loader_query(mask_sentence, 
                             config["from_date"], 
                             config["to_date"], 
                             config["use_NewsAPI"], 
                             config["use_guardian"], 
                             config["use_wikipedia"])
+        
+        print("Step 2: Load latest data --> Done")
         
         dataprep = dataprep_query(mask_sentence, 
                                   data['08_loader_query'], 
@@ -1037,6 +1041,9 @@ def bertuality(mask_sentence, config=None, return_values=False):
                                   config['similarity'], 
                                   config['focus'], 
                                   config['duplicates'])
+        
+        print("Step 3: Prepare pata --> Done")
+        print("Step 4: Start Prediction:\n")
         
         prediction = word_piece_prediction_v2(mask_sentence, 
                                            dataprep, 
