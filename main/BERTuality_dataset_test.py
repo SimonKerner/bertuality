@@ -18,8 +18,8 @@ Model, Tokenizer and actuality_datqaset
 # use this code block to download a new model/tokenizer from hugginface
 # and save them into a file for faster loading
 """
-tokenizer = BertTokenizer.from_pretrained(r'tokenizer')
-model = BertForMaskedLM.from_pretrained(r'model')
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 tokenizer.save_pretrained(os.path.join(os.getcwd(), 'tokenizer'))
 model.save_pretrained(os.path.join(os.getcwd(), 'model'))
