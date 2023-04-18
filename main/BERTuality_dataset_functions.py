@@ -4,6 +4,7 @@ from BERTuality import simple_pred_results
 from BERTuality import make_predictions
 from BERTuality import dataprep_query
 from BERTuality import pos_keywords
+
 import pandas as pd
 
 

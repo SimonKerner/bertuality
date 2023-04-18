@@ -4,9 +4,11 @@ from sentence_transformers import SentenceTransformer, util
 from BERTuality_loader import news_loader
 from collections import Counter
 from nltk import tokenize
+
 import pandas as pd
 import collections
 import itertools
+import datetime
 import time
 import nltk
 import re
@@ -978,11 +980,15 @@ def simple_pred_results(pred_query):
 
 
 def load_default_config():
+    
+    currentday = datetime.date.today()
+    deltaday = currentday - datetime.timedelta(90)
+    
     default_config = {
         'model': r'model',
         'tokenizer': r'tokenizer',
-        'from_date': '2023-03-01',
-        'to_date': '',
+        'from_date': str(deltaday),
+        'to_date': str(currentday),
         'use_NewsAPI': True, 
         'use_guardian': False, 
         'use_wikipedia': True, 

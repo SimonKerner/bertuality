@@ -1,5 +1,5 @@
-from BERTuality import bertuality
-
+#from BERTuality import bertuality
+import datetime
 
 """
 BERTuality Config options 
@@ -35,7 +35,12 @@ example_config = {
 
 #values_2 = bertuality("Donald Trump is the [MASK] president of America.", return_values=True)
 
-values_3 = bertuality("Tim Cook is the current CEO of [MASK].", return_values=True)
+#values_3 = bertuality("Tim Cook is the current CEO of [MASK].", return_values=True)
 
 
 
+currentday = datetime.date.today()
+deltaday = currentday - datetime.timedelta(60)
+
+currentday = str(currentday)
+deltaday = str(deltaday)
