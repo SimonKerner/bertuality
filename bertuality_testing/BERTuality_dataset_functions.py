@@ -1,9 +1,14 @@
-from BERTuality import word_piece_prediction
-from BERTuality import word_piece_prediction_v2
-from BERTuality import simple_pred_results
-from BERTuality import make_predictions
-from BERTuality import dataprep_query
-from BERTuality import pos_keywords
+import os
+import sys
+
+path = os.path.join(os.path.abspath('..'))
+sys.path.append(path)
+
+from bertuality.BERTuality import word_piece_prediction
+from bertuality.BERTuality import simple_pred_results
+from bertuality.BERTuality import make_predictions
+from bertuality.BERTuality import dataprep_query
+from bertuality.BERTuality import pos_keywords
 
 import pandas as pd
 
@@ -88,89 +93,6 @@ def load_actuality_dataset(tokenizer, delete_unknown_token = False):
 
 
 def automatic_dataset_pred(actuality_dataset, loader_query, tokenizer, model, 
-                           subset_size=2, sim_score=0, focus_padding=0, 
-                           threshold=None, max_input=None, query_test=False, 
-                           extraction=True, similarity=True, focus=True, duplicates=False):
-    
-    actuality_dataset = actuality_dataset.reset_index(drop=True)
-    
-    results = []
-    error = []
-    for index in range(len(actuality_dataset)):
-        
-        print(f"\nDataset Prediction Progress [{index+1}/{len(actuality_dataset)}]")
-        
-        
-        query = dataprep_query(actuality_dataset["MaskSatz"][index], loader_query[index], tokenizer, 
-                               subset_size=subset_size, sim_score=sim_score, focus_padding=focus_padding, 
-                               extraction=extraction, similarity=similarity, focus=focus, duplicates=duplicates)
-        
-        # For testing the query
-        if query_test == True: 
-            results += query, 
-            continue
-        
-        # safety mech
-        if len(query)==0: 
-            samp_results = {"01_Nummer": actuality_dataset["Nummer"][index],
-                   "02_MaskSatz": actuality_dataset["MaskSatz"][index],
-                   "03_Original": actuality_dataset["Original"][index],
-                   "04_Gold":actuality_dataset["Gold"][index],
-                   "05_query": query,
-                   "06_Prediction": "Error"}
-            results.append(samp_results)
-            error += index,
-            continue
-        
-        # Test Knowlede of BERT without input
-        kn_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], [""], model, tokenizer, max_input=max_input)              
-        kn_simple_results = simple_pred_results(kn_pred_query)
-        
-        # Test Original BERT with input
-        or_pred_query = make_predictions(actuality_dataset["MaskSatz"][index], query, model, tokenizer, max_input=max_input)              
-        or_simple_results = simple_pred_results(or_pred_query)  
-        
-        wp_pred_query = word_piece_prediction(actuality_dataset["MaskSatz"][index], query, model, tokenizer, 
-                                              threshold=threshold, max_input=max_input)              
-        wp_simple_results = simple_pred_results(wp_pred_query)                                  
-        
-        
-        samp_results = {"01_Nummer": actuality_dataset["Nummer"][index],
-                   "02_MaskSatz": actuality_dataset["MaskSatz"][index],
-                   "03_Original": actuality_dataset["Original"][index],
-                   "04_Gold":actuality_dataset["Gold"][index],
-                   "05_query": query,
-                   "06_keywords": pos_keywords(actuality_dataset["MaskSatz"][index]),
-                   
-                   "07_kn_pred_query": kn_pred_query,
-                   "08_kn_simple_results": kn_simple_results,
-                   "09_kn_word": kn_simple_results["Token"][0],
-                   "10_kn_score": kn_simple_results["sum_up_score"][0],
-                   
-                   "11_or_pred_query": or_pred_query,
-                   "12_or_simple_results": or_simple_results,
-                   "13_or_word": or_simple_results["Token"][0],
-                   "14_or_score": or_simple_results["sum_up_score"][0],
-                   
-                   "15_wp_pred_query": wp_pred_query,
-                   "16_wp_simple_results": wp_simple_results,
-                   "17_wp_word": wp_simple_results["Token"][0],
-                   "18_wp_score": wp_simple_results["sum_up_score"][0],
-                   }
-        results.append(samp_results)
-    
-    print("\nActuality_Dataset Prediction Summary:")
-    print("Length Dataset:", len(results))
-    print("Predictions on:", round((len(results) - len(error))/len(results)*100, 2), "% of Dataset")
-    print("No Predictions for Index:", error)
-    
-    return results
-
-
-
-
-# THIS PRED IS USED FOR WP-PRED v2
-def automatic_dataset_pred_v2(actuality_dataset, loader_query, tokenizer, model, 
                            subset_size=2, sim_score=0.0, focus_padding=0, 
                            threshold=None, max_input=None, query_test=False, 
                            extraction=True, similarity=True, focus=True, duplicates=False, only_target_token=False):
@@ -214,7 +136,7 @@ def automatic_dataset_pred_v2(actuality_dataset, loader_query, tokenizer, model,
         or_simple_results = simple_pred_results(or_pred_query)  
         
         # Test full Word Piece Prediction # TODO is v2!!!!!!!!!!!!!!!!!
-        wp_pred_query = word_piece_prediction_v2(actuality_dataset["MaskSatz"][index], query, model, tokenizer, 
+        wp_pred_query = word_piece_prediction(actuality_dataset["MaskSatz"][index], query, model, tokenizer, 
                                               threshold=threshold, max_input=max_input, only_target_token=only_target_token)              
         wp_simple_results = simple_pred_results(wp_pred_query)                                  
         

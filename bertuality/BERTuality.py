@@ -1,15 +1,14 @@
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from transformers import BertTokenizer, BertForMaskedLM, pipeline
 from sentence_transformers import SentenceTransformer, util
-from BERTuality_loader import news_loader
+from bertuality.BERTuality_loader import news_loader
 from collections import Counter
 from nltk import tokenize
 
 import pandas as pd
 import collections
 import itertools
-import datetime
-import time
+
 import nltk
 import re
 
@@ -488,64 +487,6 @@ def detokenizer(token_list, tokenizer):
 
 
 
-"""
-    OR_PRED_QUERY -- Original Projekt: BERT_Prediction Pipeline:  
-        - uses fill_mask_pipeline
-"""
-
-
-def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_input=None):
-    
-    if len(input_sentences) == 0: return
-    if max_input != None: input_sentences = input_sentences[:max_input]
-    
-    # pipeline pre-trained
-    fill_mask_pipeline_pre = pipeline("fill-mask", model=model, tokenizer=tokenizer)
-    
-    #create df
-    columns = ['masked', 'input', 'input + masked', 'token1', 'score1', 'token2', 'score2', 'token3', 'score3']
-    pred = pd.DataFrame(columns = columns)
-    
-    #fill df
-    pred['input'] = input_sentences
-    pred['masked'] = masked_sentence
-
-    #make predictions
-    token1 = []
-    score1 = []
-    token2 = []
-    score2 = []
-    token3 = []
-    score3 = []
-    sentences = []
-    
-    for i in range(len(pred)):
-        sent = (pred.iloc[i].iloc[1] + " " + pred.iloc[i].iloc[1] + " " + pred.iloc[i].iloc[0] + " " + pred.iloc[i].iloc[1] + " " + pred.iloc[i].iloc[1])
-        sentences.append(sent)
-        
-        preds_i = fill_mask_pipeline_pre(sent)[:3]
-    
-        token1.append(preds_i[0]['token_str'].replace(" ", ""))
-        score1.append(preds_i[0]['score'])
-        token2.append(preds_i[1]['token_str'].replace(" ", ""))
-        score2.append(preds_i[1]['score'])
-        token3.append(preds_i[2]['token_str'].replace(" ", ""))
-        score3.append(preds_i[2]['score'])
-        
-    #fill df with scores, predictions    
-    pred['input + masked'] = sentences
-    pred['token1'] = token1
-    pred['score1'] = score1
-    pred['token2'] = token2
-    pred['score2'] = score2
-    pred['token3'] = token3
-    pred['score3'] = score3
-    
-    return pred
-
-
-
-
 # main query for input data --> returns dict, but changeable to whatever
 def query_pipeline(sample, from_date, to_date, tokenizer, subset_size, sim_score, focus_padding, use_NewsAPI = True):
     
@@ -577,151 +518,8 @@ def query_pipeline(sample, from_date, to_date, tokenizer, subset_size, sim_score
         - able to predict every kind of word
 """
 
-# THIS VERSTION IS DEPRECATED # THIS VERSTION IS DEPRECATED # THIS VERSTION IS DEPRECATED 
 
-
-def create_expand_sentences(tokens, wp_position, tokenizer):
-    word_piece_input = []
-    wp_position.sort()
-    
-    sliced_out = tokens[0 : wp_position[0]] + tokens[wp_position[-1] + 1:]
-    
-    for p in wp_position:
-        
-        temp_sliced_out = sliced_out[:]
-        temp_sliced_out.insert(wp_position[0], tokens[p].replace("##", ""))
-        
-        word_piece_input += detokenizer(temp_sliced_out, tokenizer), 
-        
-    return word_piece_input
-
-
-
-
-def word_piece_temp_df_pred(mask_sentence, tokens, wp_position, model, tokenizer):
-    
-    ## create sentences - for a whole word piece word
-    
-    # 1. create new sentence
-    word_piece_input = create_expand_sentences(tokens, wp_position, tokenizer)
-        
-    # 2. make prediciton to new sentences
-    piece_pred = make_predictions(mask_sentence, word_piece_input, model, tokenizer)
-    
-    # 3. get word and score of word --append to list
-    concat_word = ""
-    if piece_pred["token1"].nunique() == 1:
-        concat_word = piece_pred["token1"][0]
-    else:
-        for p in piece_pred["token1"]:
-            concat_word += p
-    
-    # 4. get list - concat word and get average score
-    temp_df = pd.DataFrame([{'masked': mask_sentence, 
-                             'input': piece_pred["input"],
-                             "input + masked": piece_pred["input + masked"],
-                             'token1': concat_word, 
-                             'score1': piece_pred["score1"].mean()}])
-    return temp_df
-
-
-
-
-def word_piece_prediction(mask_sentence, input_sentences, model, tokenizer, max_input=None, combine=True, threshold=None):
-    start_time = time.perf_counter()
-    # find index of ali ##ba ##ba
-    # rule word bevore ## is always part of whole word
-    # find whole word pieces
-    if max_input != None: input_sentences = input_sentences[:max_input]
-    
-    print(mask_sentence)
-    print("\n    Starting WordPiece Prediction:")
-    print("    Input Size:", len(input_sentences))
-    
-    #output storage
-    wp_results = pd.DataFrame(columns=["masked", "input", "input + masked", "token1", "score1"])
-    
-    status = 0
-    sen_size = len(input_sentences)
-    #get input sentences
-    for sentence in input_sentences:
-        
-        #tokens = tokenizer.tokenize(sentence)
-        tokens = better_tokenizer(sentence, tokenizer)
-        
-        # second path --> sentence has word pieces -- can be found with ## - wp-pred
-        wp_position = []
-        wp_temp_df = None
-        wp_append_start = False
-        
-        for t_pos in range(len(tokens)):
-            # find count of ##pieces
-            #word = tokens[t_pos]
-            
-            if "##" in tokens[t_pos]:
-                wp_position += t_pos,    # append first occurence  
-                
-                if wp_append_start == False:
-                    wp_position += (t_pos - 1),    # append start of word piece word (==equal to one word) 
-                    wp_append_start = True
-                    
-            elif wp_append_start == True and (("##" not in tokens[t_pos]) or (t_pos == len(tokens) - 1)): # word piece word is over --> make pred for it
-                
-                # get results of prediction in DataFrame
-                temp_df = word_piece_temp_df_pred(mask_sentence, tokens, wp_position, model, tokenizer)
-                
-                # concat results of temp_df to results 
-                # option True is able to use threshold speedup which breaks loop, when possible word is found
-                # possible word = when first word exceeds threshold
-                if combine == True:
-                    wp_temp_df = pd.concat([wp_temp_df, temp_df], ignore_index=True)
-
-                    if type(threshold) == float and temp_df["score1"][0] >= threshold: 
-                        break
-             
-                # else is equal to combine False - no threshold --> append everything
-                else: 
-                    wp_results = pd.concat([wp_results, temp_df], ignore_index=True)
-                
-                # 5. reset counter and lists for next word piece
-                wp_position.clear()
-                wp_append_start = False
-        
-        # if size wp_results == 0 --> no wp_word was found (all tokens known) --> use normal make_pred pipe for prediction
-        if type(wp_temp_df) == type(None):
-            # get results of prediction in DataFrame
-            temp_df = make_predictions(mask_sentence, [sentence], model, tokenizer)
-            
-            # concat results of
-            wp_results = pd.concat([wp_results, temp_df], ignore_index=True)
-            
-        # when multiple word piece words are in one sentence,
-        # this sentence will be predicted on multiple times
-        # pred option True will take only the best token results of all sentences          
-        elif combine == True:
-                
-            index = wp_temp_df["score1"].idxmax()
-            best_result = wp_temp_df.iloc[index]
-            wp_results = pd.concat([wp_results, best_result.to_frame().T], ignore_index=True)
-        
-        # status prints
-        status+=1
-        print("    Progress -->", round(status/sen_size*100, 2), "%")
-    end_time = time.perf_counter()
-    print(f"    WPP-Performance: {end_time - start_time:0.4f} seconds")
-          
-    #return list of sentences with  --> return predicted sentences from focus
-    return wp_results
-
-
-######################################################################################################################
-######################################################################################################################
-############################################ WORD PIECE PREDICTION v2 ################################################
-######################################################################################################################
-######################################################################################################################
-
-
-def make_predictions_v2(masked_sentence, input_sentences, model, tokenizer, max_input=None, only_target_token=None, targets=None):
+def make_predictions(masked_sentence, input_sentences, model, tokenizer, max_input=None, only_target_token=None, targets=None):
     
     if len(input_sentences) == 0: return
     if max_input != None: input_sentences = input_sentences[:max_input]
@@ -828,7 +626,7 @@ def wp_input_sentence_creator(tokens, every_wp_position, tokenizer):
 
 
 
-def wp_prediction_pred_v2(mask_sentence, inputs, model, tokenizer, max_input, only_target_token, target_token):
+def wp_prediction_pred(mask_sentence, inputs, model, tokenizer, max_input, only_target_token, target_token):
     
     if only_target_token == True:
         # delete duplicates
@@ -837,7 +635,7 @@ def wp_prediction_pred_v2(mask_sentence, inputs, model, tokenizer, max_input, on
         target_token = [t for t in target_token if t != "."]
     
     
-    piece_pred = make_predictions_v2(mask_sentence, inputs, model, tokenizer, max_input, only_target_token, targets=target_token)
+    piece_pred = make_predictions(mask_sentence, inputs, model, tokenizer, max_input, only_target_token, targets=target_token)
     
     concat_word = ""
     if piece_pred["token1"].nunique() == 1:
@@ -857,15 +655,15 @@ def wp_prediction_pred_v2(mask_sentence, inputs, model, tokenizer, max_input, on
 
 
 
-def word_piece_prediction_v2(mask_sentence, input_sentences, model, tokenizer, max_input=None, combine=True, threshold=None, only_target_token=None):
-    start_time = time.perf_counter()
+def word_piece_prediction(mask_sentence, input_sentences, model, tokenizer, max_input=None, combine=True, threshold=None, only_target_token=None):
+
     # find index of ali ##ba ##ba
     # rule word bevore ## is always part of whole word
     # find whole word pieces
     if max_input != None: input_sentences = input_sentences[:max_input]
     
     print(mask_sentence)
-    print("\n    Starting WordPiece Prediction:")
+    print("\n    WordPiece Prediction:")
     print("    Input Size:", len(input_sentences))
     
     #output storage
@@ -897,7 +695,7 @@ def word_piece_prediction_v2(mask_sentence, input_sentences, model, tokenizer, m
                     target_token = [better_tokenizer(i, tokenizer) for i in inputs]
                     target_token = [j for i in target_token for j in i]
                 
-                temp_df = wp_prediction_pred_v2(mask_sentence, inputs, model, tokenizer, max_input, only_target_token, target_token)
+                temp_df = wp_prediction_pred(mask_sentence, inputs, model, tokenizer, max_input, only_target_token, target_token)
                 
                 if combine == True:
                     wp_temp_df = pd.concat([wp_temp_df, temp_df], ignore_index=True)
@@ -918,7 +716,7 @@ def word_piece_prediction_v2(mask_sentence, input_sentences, model, tokenizer, m
                 target_token = [t.replace("##", "") for t in tokens]
             
             # get results of prediction in DataFrame
-            temp_df = make_predictions_v2(mask_sentence, [sentence], model, tokenizer, max_input, only_target_token, target_token)
+            temp_df = make_predictions(mask_sentence, [sentence], model, tokenizer, max_input, only_target_token, target_token)
             
             # concat results of
             wp_results = pd.concat([wp_results, temp_df], ignore_index=True)
@@ -935,17 +733,9 @@ def word_piece_prediction_v2(mask_sentence, input_sentences, model, tokenizer, m
         # status prints
         status+=1
         print("    Progress -->", round(status/sen_size*100, 2), "%")
-    end_time = time.perf_counter()
-    print(f"    WPP-Performance: {end_time - start_time:0.4f} seconds")
           
     #return list of sentences with  --> return predicted sentences from focus
     return wp_results
-
-######################################################################################################################
-######################################################################################################################
-############################################ WORD PIECE PREDICTION v2 ################################################
-######################################################################################################################
-######################################################################################################################
 
 
 
@@ -970,110 +760,6 @@ def simple_pred_results(pred_query):
     results = results.sort_values(by=["sum_up_score"], ascending=False, ignore_index=True) # was sum_up_score
     
     return results
-
-
-
-
-"""
-    bertuality_main_func
-"""
-
-
-def load_default_config():
-    
-    currentday = datetime.date.today()
-    deltaday = currentday - datetime.timedelta(90)
-    
-    default_config = {
-        'model': r'model',
-        'tokenizer': r'tokenizer',
-        'from_date': str(deltaday),
-        'to_date': str(currentday),
-        'use_NewsAPI': True, 
-        'use_guardian': False, 
-        'use_wikipedia': True, 
-        'subset_size': 2,
-        'sim_score': 0.3,
-        'focus_padding': 6,
-        'duplicates': False,
-        'extraction': True,
-        'similarity': True,
-        'focus': True,
-        'max_input': 30,
-        'threshold': 0.9,
-        'only_target_token': True
-        }
-    return default_config
-
-
-
-
-def bertuality(mask_sentence, config=None, return_values=False):
-    
-    try:
-        if type(config) == type(None):
-            config = load_default_config()
-        elif type(config) == type(dict):
-            config = config
-        else: raise ValueError
-        
-    except ValueError: 
-        print("No valid config found!")
-        print("Set config to 'None' for default values")
-        
-    else:
-        model = BertForMaskedLM.from_pretrained(config["model"])
-        tokenizer = BertTokenizer.from_pretrained(config["tokenizer"])
-        
-        print()
-        print("Step 1: Load config --> Done")
-        
-        data = loader_query(mask_sentence, 
-                            config["from_date"], 
-                            config["to_date"], 
-                            config["use_NewsAPI"], 
-                            config["use_guardian"], 
-                            config["use_wikipedia"])
-        
-        print("Step 2: Load latest data --> Done")
-        
-        dataprep = dataprep_query(mask_sentence, 
-                                  data['08_loader_query'], 
-                                  tokenizer, 
-                                  config['subset_size'], 
-                                  config['sim_score'], 
-                                  config['focus_padding'], 
-                                  config['extraction'], 
-                                  config['similarity'], 
-                                  config['focus'], 
-                                  config['duplicates'])
-        
-        print("Step 3: Prepare pata --> Done")
-        print("Step 4: Start Prediction:\n")
-        
-        prediction = word_piece_prediction_v2(mask_sentence, 
-                                           dataprep, 
-                                           model, 
-                                           tokenizer, 
-                                           max_input=config['max_input'],
-                                           threshold=config['threshold'],
-                                           only_target_token=config['only_target_token'])
-        
-        simple_pred = simple_pred_results(prediction)
-
-        pred_sentence = mask_sentence.replace("[MASK]", simple_pred["Token"][0].capitalize())
-        print("\n" + pred_sentence)
-        
-        if return_values == True:
-            return [mask_sentence, config, data, dataprep, prediction, simple_pred, pred_sentence]
-                
-    
-  
-
-
-
-
-
 
 
 
