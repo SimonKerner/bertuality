@@ -31,7 +31,7 @@ def load_default_config():
         'use_guardian': False, 
         'use_wikipedia': True, 
         'subset_size': 2,
-        'sim_score': 0.3,
+        'sim_score': 0.25,
         'focus_padding': 6,
         'duplicates': False,
         'extraction': True,
@@ -63,8 +63,7 @@ def bertuality(mask_sentence, config=None, return_values=False):
         model = BertForMaskedLM.from_pretrained(config["model"])
         tokenizer = BertTokenizer.from_pretrained(config["tokenizer"])
         
-        print()
-        print("Step 1: Load config --> Done")
+        print("\nStep 1: Load config -------> Done")
         
         data = loader_query(mask_sentence, 
                             config["from_date"], 
@@ -86,8 +85,8 @@ def bertuality(mask_sentence, config=None, return_values=False):
                                   config['focus'], 
                                   config['duplicates'])
         
-        print("Step 3: Prepare data --> Done")
-        print("Step 4: Start Prediction:\n")
+        print("Step 3: Prepare data ------> Done")
+        print("Step 4: Start Prediction:")
         
         prediction = word_piece_prediction(mask_sentence, 
                                            dataprep, 
@@ -100,7 +99,7 @@ def bertuality(mask_sentence, config=None, return_values=False):
         simple_pred = simple_pred_results(prediction)
 
         pred_sentence = mask_sentence.replace("[MASK]", simple_pred["Token"][0].capitalize())
-        print("\n" + pred_sentence)
+        print("\nPrediction: " + pred_sentence)
         
         if return_values == True:
             return [mask_sentence, config, data, dataprep, prediction, simple_pred, pred_sentence]

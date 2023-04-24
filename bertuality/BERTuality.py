@@ -4,11 +4,11 @@ from sentence_transformers import SentenceTransformer, util
 from bertuality.BERTuality_loader import news_loader
 from collections import Counter
 from nltk import tokenize
+from tqdm import tqdm
 
 import pandas as pd
 import collections
 import itertools
-
 import nltk
 import re
 
@@ -157,7 +157,7 @@ def nltk_sentence_split(page_loader):
 
 
 # used to merge the list of pages into one list with all information
-def merge_pages(filtered_pages):
+def merge_sentences(filtered_pages):
     merged = []
     for page in filtered_pages:
         for text in page:
@@ -399,7 +399,7 @@ def dataprep_query(mask_sentence, loader_query, tokenizer,
     split_query = nltk_sentence_split(loader_query)
     
     # is equal to merged_query
-    dataprep = merge_pages(split_query)
+    dataprep = merge_sentences(split_query)
     
     # extraction_query 
     if extraction == True:
@@ -494,7 +494,7 @@ def query_pipeline(sample, from_date, to_date, tokenizer, subset_size, sim_score
     
     loader_query = news_loader(from_date, to_date, key_words, use_NewsAPI)
     split_query = nltk_sentence_split(loader_query)
-    merged_query = merge_pages(split_query)
+    merged_query = merge_sentences(split_query)
     extraction_query = filter_for_keyword_subsets(merged_query, key_words, tokenizer, subset_size)
     similarity_query = similarity_filter(sample, extraction_query, sim_score)
     focus_query = keyword_focus(similarity_query, key_words, focus_padding)
@@ -662,26 +662,19 @@ def word_piece_prediction(mask_sentence, input_sentences, model, tokenizer, max_
     # find whole word pieces
     if max_input != None: input_sentences = input_sentences[:max_input]
     
-    print(mask_sentence)
-    print("\n    WordPiece Prediction:")
-    print("    Input Size:", len(input_sentences))
-    
     #output storage
     wp_results = pd.DataFrame(columns=["masked", "input", "input + masked", "token1", "score1"])
     
-    status = 0
-    sen_size = len(input_sentences)
+    #status = 0
+    #sen_size = len(input_sentences)
     #get input sentences
-    for sentence in input_sentences:
+    for sentence in tqdm(input_sentences):
         
         wp_temp_df = None
         
         #tokens = tokenizer.tokenize(sentence)
         tokens = better_tokenizer(sentence, tokenizer)
         
-        """
-               new second WP-PRED-Module
-        """
         # find word-piece-positions
         every_wp_position = wp_find_positions(tokens)
          
@@ -728,12 +721,8 @@ def word_piece_prediction(mask_sentence, input_sentences, model, tokenizer, max_
                 
             index = wp_temp_df["score1"].idxmax()
             best_result = wp_temp_df.iloc[index]
-            wp_results = pd.concat([wp_results, best_result.to_frame().T], ignore_index=True)
-        
-        # status prints
-        status+=1
-        print("    Progress -->", round(status/sen_size*100, 2), "%")
-          
+            wp_results = pd.concat([wp_results, best_result.to_frame().T], ignore_index=True)   
+       
     #return list of sentences with  --> return predicted sentences from focus
     return wp_results
 
@@ -749,15 +738,14 @@ def simple_pred_results(pred_query):
     
     if pred_query is None: return 
     
-    results = pd.DataFrame(columns=["Token", "Frequency", "max_score", "min_score", "mean_score", "sum_up_score", "?new_ranking?"])
+    results = pd.DataFrame(columns=["Token", "Frequency", "max_score", "min_score", "mean_score", "sum_up_score"])
     results["Token"] = pred_query["token1"].unique()
     results["Frequency"] = results["Token"].map(pred_query["token1"].value_counts())
     results["max_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].max())
     results["min_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].min())
     results["mean_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].mean())
     results["sum_up_score"] = results["Token"].map(pred_query.groupby("token1")["score1"].sum())
-    results["?new_ranking?"] = results.index.map(((results.max_score - results.min_score) * results.mean_score)/(results.max_score - results.min_score))
-    results = results.sort_values(by=["sum_up_score"], ascending=False, ignore_index=True) # was sum_up_score
+    results = results.sort_values(by=["sum_up_score"], ascending=False, ignore_index=True)
     
     return results
 
