@@ -5,7 +5,7 @@ is a concept for checking the actuality of text data with the language model "BE
 
 ## Future TODOs
 
-- [ ] Further improvementes to file and code structure
+- [x] Further improvementes to file and code structure
 - [ ] Create a Jupyter Notebook and make it interactive
 - [ ] Write a fancy readme explaining this project
 
