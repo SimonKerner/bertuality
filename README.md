@@ -11,4 +11,16 @@ is a concept for checking the actuality of text data with the language model "BE
 
 <br>
 
+## How to run this project:
+
+<p>
+  To run this Jupyter Notebook you can simply use one of the links below or by looking into the files: 
+</p>
+
+Static Notebook: [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/SimonKerner/bertuality/blob/main/TODO_Notebook.ipynb)
+
+Interactive Notebook: TODO
+
+<br>
+
 This repository will continue to be maintained by [@SimonKerner](https://github.com/SimonKerner)
