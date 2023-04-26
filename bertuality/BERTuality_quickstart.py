@@ -28,7 +28,7 @@ def load_default_config():
         'from_date': str(deltaday),
         'to_date': str(currentday),
         'use_NewsAPI': True, 
-        'use_guardian': False, 
+        'use_guardian': True, 
         'use_wikipedia': True, 
         'subset_size': 2,
         'sim_score': 0.25,
@@ -99,7 +99,7 @@ def bertuality(mask_sentence, config=None, return_values=False):
         simple_pred = simple_pred_results(prediction)
 
         pred_sentence = mask_sentence.replace("[MASK]", simple_pred["Token"][0].capitalize())
-        print("\nPrediction: " + pred_sentence)
+        print("\nPrediction: " + pred_sentence + "\n")
         
         if return_values == True:
             return [mask_sentence, config, data, dataprep, prediction, simple_pred, pred_sentence]
