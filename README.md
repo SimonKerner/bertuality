@@ -17,7 +17,7 @@ is a concept for checking the actuality of text data with the language model "BE
   To run this Jupyter Notebook you can simply use one of the links below or by looking into the files: 
 </p>
 
-Static Notebook: [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/SimonKerner/bertuality/blob/main/TODO_Notebook.ipynb)
+Static Notebook: [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/SimonKerner/bertuality/blob/main/bertuality_notebook.ipynb)
 
 Interactive Notebook: TODO
 
